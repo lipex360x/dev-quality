@@ -147,6 +147,32 @@ def test_main_dirty_py_exits_1(
     assert "COMMENT:" in capsys.readouterr().out
 
 
+def test_py_pep723_header_allowed(tmp_path: Path) -> None:
+    content = (
+        "# /// script\n"
+        '# requires-python = ">=3.11"\n'
+        '# dependencies = ["rich>=13"]\n'
+        "# ///\n"
+        "x = 1\n"
+    )
+    path = write_py(tmp_path, content)
+    assert check_python_file(path) == []
+
+
+def test_py_pep723_comment_after_block_still_detected(tmp_path: Path) -> None:
+    content = (
+        "# /// script\n"
+        "# requires-python = '>=3.11'\n"
+        "# ///\n"
+        "# this is a real comment\n"
+        "x = 1\n"
+    )
+    path = write_py(tmp_path, content)
+    findings = check_python_file(path)
+    assert len(findings) == 1
+    assert ":4:" in findings[0]
+
+
 def test_main_dispatches_bash(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     path = write_sh(tmp_path, "#!/usr/bin/env bash\n# comment\nx=1\n")
     monkeypatch.setattr(sys, "argv", ["check_comments.py", str(path)])
