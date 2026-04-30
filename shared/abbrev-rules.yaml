@@ -1,0 +1,59 @@
+---
+title: Abbreviation Rules
+purpose: >
+  Shared denylist/allowlist for cognitive-pause abbreviation detection.
+  Used by check_abbrev.py for Python (via AST) and Bash (via regex).
+  Add to denylist when a new abbreviation surfaces in code review.
+
+denylist:
+  - attr    # → attribute
+  - buf     # → buffer
+  - cfg     # → config / configuration
+  - cmd     # → command
+  - col     # → column / color
+  - ctx     # → context
+  - db      # → database
+  - dest    # → destination
+  - doc     # → document
+  - dst     # → destination
+  - elem    # → element
+  - env     # → environment
+  - err     # → error
+  - exc     # → exception
+  - ext     # → extension
+  - fmt     # → format
+  - fn      # → function
+  - func    # → function
+  - idx     # → index
+  - img     # → image
+  - mod     # → module
+  - msg     # → message
+  - num     # → number
+  - obj     # → object
+  - opts    # → options
+  - pkg     # → package
+  - ref     # → reference
+  - req     # → request
+  - res     # → response / result
+  - sep     # → separator
+  - src     # → source
+  - tmp     # → temp / temporary
+  - usr     # → user
+  - val     # → value
+  - var     # → variable
+
+allowlist:
+  - self
+  - cls
+  - args
+  - kwargs
+  - i
+  - j
+  - k
+  - _
+  - id
+  - ok
+  - io
+
+allowlist_sh:
+  - dest    # counterpart to src in file-operation functions

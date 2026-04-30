@@ -1,0 +1,103 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = [
+    "check_abbrev",
+    "check_bash_logs",
+    "check_bash_tests",
+    "check_comments",
+    "check_complexity",
+    "check_size",
+]
+
+[tool.setuptools.package-dir]
+"" = "stacks/python/checkers"
+
+[project]
+name = "dev-quality"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["pyyaml>=6.0"]
+
+[project.scripts]
+check-abbrev = "check_abbrev:main"
+check-bash-logs = "check_bash_logs:main"
+check-bash-tests = "check_bash_tests:main"
+check-comments = "check_comments:main"
+check-complexity = "check_complexity:main"
+check-size = "check_size:main"
+
+[dependency-groups]
+dev = [
+    "bandit>=1.8",
+    "mypy>=1.15",
+    "pylint>=3.3",
+    "pytest>=8.3",
+    "pytest-cov>=6.1",
+    "ruff>=0.11",
+    "types-pyyaml>=6.0",
+    "vulture>=2.14",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["*.test.py"]
+addopts = "--import-mode=importlib --cov=stacks/python/checkers --cov-report=term-missing"
+
+[tool.coverage.run]
+branch = true
+source = ["stacks/python/checkers"]
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+exclude_lines = [
+    "if __name__ == .__main__.:",
+    "pragma: no cover",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RET", "C", "S", "N", "PLR2004"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["S101", "S603"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 6
+
+[tool.mypy]
+strict = true
+python_version = "3.11"
+explicit_package_bases = true
+
+[tool.pylint.messages_control]
+disable = "all"
+enable = ["C0103", "R0801"]
+
+[tool.pylint.similarities]
+min-similarity-lines = 4
+ignore-comments = true
+ignore-docstrings = true
+ignore-imports = true
+
+[tool.pylint.basic]
+argument-rgx = "^([a-z_][a-z0-9_]{2,}|[ijk_]|id|pi)$"
+variable-rgx = "^([a-z_][a-z0-9_]{2,}|[ijk_]|id|pi)$"
+attr-rgx     = "^([a-z_][a-z0-9_]{2,}|[ijk_]|id|pi)$"
+function-rgx = "^([a-z_][a-zA-Z0-9_]{2,}|[ijk_]|id|pi)$"
+method-rgx   = "^([a-z_][a-zA-Z0-9_]{2,}|[ijk_]|id|pi)$"
+module-rgx   = "^[a-z_][a-z0-9_]*$"
+class-rgx    = "^_?[A-Z][a-zA-Z0-9]{2,}$"
+
+[tool.bandit]
+skips = ["B404", "B603", "B607"]
+exclude_dirs = ["tests"]
+
+[tool.vulture]
+min_confidence = 80

@@ -1,0 +1,43 @@
+- id: check-abbrev
+  name: Check abbreviations
+  description: Detects banned abbreviations in Python and Bash files
+  entry: check-abbrev
+  language: python
+  types_or: [python, shell]
+
+- id: check-comments
+  name: Check comments
+  description: Blocks inline and block comments in Python and Bash source files
+  entry: check-comments
+  language: python
+  types_or: [python, shell]
+
+- id: check-complexity
+  name: Check Bash complexity
+  description: Flags Bash functions exceeding cyclomatic complexity limit
+  entry: check-complexity
+  language: python
+  types: [shell]
+
+- id: check-size
+  name: Check file and function size
+  description: Flags files and functions that exceed line-length limits
+  entry: check-size
+  language: python
+  types_or: [python, shell]
+
+- id: check-bash-tests
+  name: Check Bash test coverage
+  description: Ensures every Bash script has a paired test file
+  entry: check-bash-tests
+  language: python
+  pass_filenames: false
+  types: [shell]
+
+- id: check-bash-logs
+  name: Check Bash log init
+  description: Ensures every Bash script calls log::init_script
+  entry: check-bash-logs
+  language: python
+  pass_filenames: false
+  types: [shell]

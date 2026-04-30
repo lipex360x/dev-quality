@@ -1,12 +1,17 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyo
 .venv/
 .ruff_cache/
 .mypy_cache/
 .pytest_cache/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
+dist/
+*.egg-info/
 
 # uv
 uv.lock
@@ -19,3 +24,4 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+*.swo
