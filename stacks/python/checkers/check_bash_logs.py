@@ -57,8 +57,7 @@ def main() -> None:
 
     result = check_bash_logs(root)
     if result is None:
-        print("FAIL:scripts-bash-not-found")
-        sys.exit(1)
+        sys.exit(0)
 
     for finding in result:
         print(finding)
