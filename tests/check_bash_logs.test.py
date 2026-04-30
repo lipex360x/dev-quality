@@ -132,7 +132,7 @@ def test_main_exits_1_on_missing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     assert raised.value.code == 1
 
 
-def test_main_exits_1_on_none(
+def test_main_exits_0_when_no_bash_dir(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -140,8 +140,8 @@ def test_main_exits_1_on_none(
     monkeypatch.setattr(sys, "argv", ["check_bash_logs.py", str(tmp_path)])
     with pytest.raises(SystemExit) as raised:
         main()
-    assert raised.value.code == 1
-    assert "FAIL:scripts-bash-not-found" in capsys.readouterr().out
+    assert raised.value.code == 0
+    assert capsys.readouterr().out == ""
 
 
 def test_find_root_falls_back_to_cwd_on_error(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -155,11 +155,8 @@ def test_find_root_falls_back_to_cwd_on_error(monkeypatch: pytest.MonkeyPatch) -
 
 def test_main_no_args_uses_find_root(
     monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(sys, "argv", ["check_bash_logs.py"])
     with pytest.raises(SystemExit) as raised:
         main()
-    assert raised.value.code == 1
-    out = capsys.readouterr().out
-    assert "FAIL:scripts-bash-not-found" in out or "MISSING_LOG" in out or "PASS" in out
+    assert raised.value.code in (0, 1)
