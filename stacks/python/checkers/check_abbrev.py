@@ -7,18 +7,32 @@ from pathlib import Path
 
 import yaml
 
+_DEFAULT_DENYLIST: frozenset[str] = frozenset([
+    "attr", "buf", "cfg", "cmd", "col", "ctx", "db", "dest", "doc", "dst",
+    "elem", "env", "err", "exc", "ext", "fmt", "fn", "func", "idx", "img",
+    "mod", "msg", "num", "obj", "opts", "pkg", "ref", "req", "res", "sep",
+    "src", "tmp", "usr", "val", "var",
+])
+_DEFAULT_ALLOWLIST: frozenset[str] = frozenset([
+    "self", "cls", "args", "kwargs", "i", "j", "k", "_", "id", "ok", "io",
+])
+_DEFAULT_LANG: dict[str, frozenset[str]] = {"sh": frozenset(["dest"])}
 
-def _rules_path() -> Path:
-    return Path(__file__).parent.parent.parent.parent / "shared" / "abbrev-rules.yaml"
+
+def _find_rules_file() -> Path | None:
+    candidates = [
+        Path(sys.argv[0]).parent.parent.parent / "shared" / "abbrev-rules.yaml",
+        Path(__file__).parent.parent.parent.parent / "shared" / "abbrev-rules.yaml",
+    ]
+    return next((p for p in candidates if p.exists()), None)
 
 
 def _load_rules(
     path: Path | None = None,
 ) -> tuple[frozenset[str], frozenset[str], dict[str, frozenset[str]]]:
-    resolved = path or _rules_path()
-    if not resolved.exists():
-        print(f"FAIL:abbrev-rules-not-found:{resolved}")
-        sys.exit(2)
+    resolved = path if path is not None else _find_rules_file()
+    if resolved is None or not resolved.exists():
+        return _DEFAULT_DENYLIST, _DEFAULT_ALLOWLIST, _DEFAULT_LANG
     data = yaml.safe_load(resolved.read_text(encoding="utf-8"))
     denylist = frozenset(data.get("denylist", []))
     allowlist = frozenset(data.get("allowlist", []))

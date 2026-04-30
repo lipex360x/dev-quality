@@ -234,11 +234,11 @@ def test_load_rules_returns_frozensets(tmp_path: Path) -> None:
     assert "dest" in lang.get("sh", frozenset())
 
 
-def test_load_rules_exits_2_when_missing(tmp_path: Path) -> None:
+def test_load_rules_uses_defaults_when_path_missing(tmp_path: Path) -> None:
     missing = tmp_path / "no_such.yaml"
-    with pytest.raises(SystemExit) as raised:
-        _load_rules(missing)
-    assert raised.value.code == 2
+    deny, allow, lang = _load_rules(missing)
+    assert len(deny) > 0
+    assert "self" in allow
 
 
 def test_main_no_args_exits_0(monkeypatch: pytest.MonkeyPatch) -> None:
