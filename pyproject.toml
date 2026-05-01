@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 py-modules = [
     "check_abbrev",
+    "check_all",
     "check_bash_logs",
     "check_bash_tests",
     "check_comments",
@@ -19,10 +20,18 @@ py-modules = [
 name = "dev-quality"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["pyyaml>=6.0"]
+dependencies = [
+    "pyyaml>=6.0",
+    "bandit>=1.8",
+    "mypy>=1.15",
+    "pylint>=3.3",
+    "ruff>=0.11",
+    "vulture>=2.14",
+]
 
 [project.scripts]
 check-abbrev = "check_abbrev:main"
+check-all = "check_all:main"
 check-bash-logs = "check_bash_logs:main"
 check-bash-tests = "check_bash_tests:main"
 check-comments = "check_comments:main"
@@ -31,14 +40,9 @@ check-size = "check_size:main"
 
 [dependency-groups]
 dev = [
-    "bandit>=1.8",
-    "mypy>=1.15",
-    "pylint>=3.3",
     "pytest>=8.3",
     "pytest-cov>=6.1",
-    "ruff>=0.11",
     "types-pyyaml>=6.0",
-    "vulture>=2.14",
 ]
 
 [tool.pytest.ini_options]
