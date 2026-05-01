@@ -89,6 +89,30 @@ programmatically.
 
 ---
 
+## Versioning
+
+After every commit to this repo, bump the version and tag the release.
+
+**Where to update:** `pyproject.toml` → `[project] version`
+
+**Then tag and push:**
+```bash
+git tag v<new-version>
+git push origin v<new-version>
+```
+
+**Semver rules — choose based on what was committed:**
+
+| Change | Bump |
+|---|---|
+| Bug fix, behavior correction, docs, tests only | `patch` — `v0.1.x` |
+| New checker, new config param, new command, new hook | `minor` — `v0.x.0` |
+| Breaking change: hook renamed/removed, config key renamed, checker output format changed | `major` — `vx.0.0` |
+
+Always push the tag immediately after the commit. Never batch multiple features under a single tag bump.
+
+---
+
 ## Current status (2026-04-30)
 
 - [ ] Python stack checkers migrated from `.brain`
