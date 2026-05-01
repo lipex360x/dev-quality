@@ -63,10 +63,19 @@ Central repository for code quality tooling across stacks. Houses custom checker
 Run all checkers against any project without installing anything permanently:
 
 ```bash
+# from inside the target project
+cd /path/to/project
+uvx --from git+https://github.com/lipex360x/dev-quality check-all .
+
+# or from anywhere, passing the path
 uvx --from git+https://github.com/lipex360x/dev-quality check-all /path/to/project
 ```
 
 `uvx` fetches the package into a temporary environment, runs the command, and discards it. Useful for auditing a project before setting up pre-commit, or in CI without prior setup.
+
+> [!NOTE]
+> Running with `.` is safe — no cache directories (`.mypy_cache/`, `.ruff_cache/`) are
+> created in the target project.
 
 ### Permanent install — `uv`
 
@@ -79,6 +88,10 @@ uv tool install git+https://github.com/lipex360x/dev-quality
 Then use any checker without the `uvx --from ...` prefix:
 
 ```bash
+# from inside the target project
+check-all .
+
+# or passing the path
 check-all /path/to/project
 check-abbrev src/main.py
 ```
