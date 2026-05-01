@@ -69,13 +69,17 @@ uvx --from git+https://github.com/lipex360x/dev-quality check-all .
 
 # or from anywhere, passing the path
 uvx --from git+https://github.com/lipex360x/dev-quality check-all /path/to/project
+
+# disable caching entirely
+uvx --from git+https://github.com/lipex360x/dev-quality check-all --no-cache .
 ```
 
 `uvx` fetches the package into a temporary environment, runs the command, and discards it. Useful for auditing a project before setting up pre-commit, or in CI without prior setup.
 
 > [!NOTE]
-> Running with `.` is safe — no cache directories (`.mypy_cache/`, `.ruff_cache/`) are
-> created in the target project.
+> No cache directories (`.mypy_cache/`, `.ruff_cache/`) are ever created in the target
+> project. By default, caches go to the system temp directory (`/tmp/dev-quality/`).
+> Pass `--no-cache` to disable caching entirely.
 
 ### Permanent install — `uv`
 
