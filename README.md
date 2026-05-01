@@ -100,7 +100,7 @@ Then install the hooks:
 pre-commit install
 ```
 
-[↑ Back to top](#dev-quality)
+<div align="right"><a href="#dev-quality">↑ Back to top</a></div>
 
 ---
 
@@ -132,7 +132,7 @@ uvx --from git+https://github.com/lipex360x/dev-quality check-bash-tests /path/t
 uvx --from git+https://github.com/lipex360x/dev-quality check-bash-logs /path/to/project
 ```
 
-[↑ Back to top](#dev-quality)
+<div align="right"><a href="#dev-quality">↑ Back to top</a></div>
 
 ---
 
@@ -167,7 +167,7 @@ python_version: "3.12"
 
 The file is optional — defaults above apply when it is absent.
 
-[↑ Back to top](#dev-quality)
+<div align="right"><a href="#dev-quality">↑ Back to top</a></div>
 
 ---
 
@@ -192,7 +192,7 @@ repos:
 > Individual hooks do not include ruff, mypy, vulture, bandit, pylint, and shellcheck.
 > Use `check-all` to run the full suite.
 
-[↑ Back to top](#dev-quality)
+<div align="right"><a href="#dev-quality">↑ Back to top</a></div>
 
 ---
 
@@ -210,7 +210,7 @@ All checkers live in `stacks/python/checkers/`. Tests live in `tests/`. Coverage
 > [!NOTE]
 > TDD is required — write the test file before the implementation. See `CLAUDE.md` for full contribution rules.
 
-[↑ Back to top](#dev-quality)
+<div align="right"><a href="#dev-quality">↑ Back to top</a></div>
 
 ---
 
