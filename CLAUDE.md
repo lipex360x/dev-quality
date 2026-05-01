@@ -126,6 +126,7 @@ the script.
 1. `pyproject.toml` → `[project] version`
 2. `CHANGELOG.md` → add entry under the new version
 3. `README.md` → version badge + any new behavior documented
+4. `stacks/python/checkers/dev_quality_skill/SKILL.md` → reflect any new or changed rule (new checker, new banned abbreviation, new config key, changed default)
 
 **Only tag when the package behavior changes** — new checker, bug fix that affects output, new config param, new command, new hook. Do NOT tag for docs, CLAUDE.md updates, status changes, or test-only commits.
 
