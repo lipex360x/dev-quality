@@ -35,18 +35,30 @@ def _extract_changelog_entry(root: Path, version: str) -> str:
     return match.group(1).strip()
 
 
-def _update_readme_version(root: Path, version: str) -> None:
+def _update_readme_version(root: Path, version: str) -> bool:
     readme = root / "README.md"
     if not readme.exists():
-        return
+        return False
     text = readme.read_text(encoding="utf-8")
     updated = re.sub(
         r"(https://img\.shields\.io/badge/version-)v[\d.]+(-blue)",
         rf"\g<1>v{version}\2",
         text,
     )
-    if updated != text:
-        readme.write_text(updated, encoding="utf-8")
+    if updated == text:
+        return False
+    readme.write_text(updated, encoding="utf-8")
+    return True
+
+
+def _commit_readme_version(root: Path, version: str) -> None:
+    subprocess.run(["git", "add", "README.md"], cwd=str(root), check=True)  # noqa: S603, S607
+    subprocess.run(  # noqa: S603
+        ["git", "commit", "-m", f"chore: bump README version badge to v{version}"],  # noqa: S607
+        cwd=str(root),
+        check=True,
+    )
+    subprocess.run(["git", "push"], cwd=str(root), check=True)  # noqa: S603, S607
 
 
 def _tag_exists(version: str) -> bool:
@@ -81,7 +93,7 @@ def main(root: Path | None = None) -> None:
         sys.exit(1)
 
     notes = _extract_changelog_entry(root, version)
-    _update_readme_version(root, version)
+    readme_changed = _update_readme_version(root, version)
 
     if dry_run:
         print(f"Version:  {version}")
@@ -89,6 +101,8 @@ def main(root: Path | None = None) -> None:
         print(f"Notes:\n{notes}")
         return
 
+    if readme_changed:
+        _commit_readme_version(root, version)
     _create_release(tag, notes)
 
 

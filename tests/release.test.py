@@ -8,6 +8,7 @@ import pytest
 
 from release import (
     _check_gh_auth,
+    _commit_readme_version,
     _create_release,
     _extract_changelog_entry,
     _read_version,
@@ -281,15 +282,91 @@ def test_update_readme_version_removes_old_version(tmp_path: Path) -> None:
     assert "v0.5.0" not in content
 
 
+def test_update_readme_version_returns_true_when_changed(tmp_path: Path) -> None:
+    (tmp_path / "README.md").write_text(_README_WITH_BADGE, encoding="utf-8")
+    assert _update_readme_version(tmp_path, "1.2.3") is True
+
+
+def test_update_readme_version_returns_false_when_badge_absent(tmp_path: Path) -> None:
+    (tmp_path / "README.md").write_text(_README_WITHOUT_BADGE, encoding="utf-8")
+    assert _update_readme_version(tmp_path, "1.2.3") is False
+
+
+def test_update_readme_version_returns_false_when_readme_absent(tmp_path: Path) -> None:
+    assert _update_readme_version(tmp_path, "1.2.3") is False
+
+
 def test_update_readme_version_no_op_when_badge_absent(tmp_path: Path) -> None:
     (tmp_path / "README.md").write_text(_README_WITHOUT_BADGE, encoding="utf-8")
     _update_readme_version(tmp_path, "1.2.3")
-    content = (tmp_path / "README.md").read_text(encoding="utf-8")
-    assert content == _README_WITHOUT_BADGE
+    assert (tmp_path / "README.md").read_text(encoding="utf-8") == _README_WITHOUT_BADGE
 
 
-def test_update_readme_version_no_op_when_readme_absent(tmp_path: Path) -> None:
-    _update_readme_version(tmp_path, "1.2.3")
+def test_commit_readme_version_runs_git_add_and_commit(tmp_path: Path) -> None:
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0)
+        _commit_readme_version(tmp_path, "1.2.3")
+    commands = [invocation[0][0] for invocation in mock_run.call_args_list]
+    assert any(command[:2] == ["git", "add"] for command in commands)
+    assert any(command[:2] == ["git", "commit"] for command in commands)
+
+
+def test_commit_readme_version_pushes_commit(tmp_path: Path) -> None:
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0)
+        _commit_readme_version(tmp_path, "1.2.3")
+    commands = [invocation[0][0] for invocation in mock_run.call_args_list]
+    assert any(command[:2] == ["git", "push"] for command in commands)
+
+
+def test_commit_readme_version_message_contains_version(tmp_path: Path) -> None:
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0)
+        _commit_readme_version(tmp_path, "1.2.3")
+    commit_call = next(
+        invocation[0][0]
+        for invocation in mock_run.call_args_list
+        if invocation[0][0][:2] == ["git", "commit"]
+    )
+    assert any("1.2.3" in part for part in commit_call)
+
+
+def test_main_commits_readme_when_badge_changed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "pyproject.toml").write_text(_PYPROJECT, encoding="utf-8")
+    (tmp_path / "CHANGELOG.md").write_text(_CHANGELOG, encoding="utf-8")
+    (tmp_path / "README.md").write_text(_README_WITH_BADGE, encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["release.py"])
+    with (
+        patch("release._tag_exists", return_value=False),
+        patch("release._create_release"),
+        patch("release._commit_readme_version") as mock_commit,
+    ):
+        main(root=tmp_path)
+    mock_commit.assert_called_once()
+
+
+def test_main_skips_commit_when_badge_already_current(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    current_badge = (
+        "[![Version](https://img.shields.io/badge/version-v1.2.3-blue)]"
+        "(https://github.com/lipex360x/dev-quality/releases)\n"
+    )
+    (tmp_path / "pyproject.toml").write_text(_PYPROJECT, encoding="utf-8")
+    (tmp_path / "CHANGELOG.md").write_text(_CHANGELOG, encoding="utf-8")
+    (tmp_path / "README.md").write_text(current_badge, encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["release.py"])
+    with (
+        patch("release._tag_exists", return_value=False),
+        patch("release._create_release"),
+        patch("release._commit_readme_version") as mock_commit,
+    ):
+        main(root=tmp_path)
+    mock_commit.assert_not_called()
 
 
 def test_main_updates_readme_before_release(
@@ -303,6 +380,7 @@ def test_main_updates_readme_before_release(
     with (
         patch("release._tag_exists", return_value=False),
         patch("release._create_release"),
+        patch("release._commit_readme_version"),
     ):
         main(root=tmp_path)
     content = (tmp_path / "README.md").read_text(encoding="utf-8")
