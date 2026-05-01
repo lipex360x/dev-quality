@@ -4,7 +4,7 @@
 
 Central repository for code quality tooling across stacks. Houses custom checker scripts, pre-commit hook definitions, and bootstrap scripts. Single source of truth — no more copying tools across projects.
 
-[![Version](https://img.shields.io/badge/version-v0.1.1-blue)](https://github.com/lipex360x/dev-quality/releases)
+[![Version](https://img.shields.io/badge/version-v0.2.1-blue)](https://github.com/lipex360x/dev-quality/releases)
 
 ---
 
@@ -17,6 +17,7 @@ Central repository for code quality tooling across stacks. Houses custom checker
   - [Permanent install — uv](#permanent-install--uv)
   - [Automated on every commit — pre-commit](#automated-on-every-commit--pre-commit)
 - [Running specific checkers](#running-specific-checkers)
+- [check-all behavior](#check-all-behavior)
 - [Local configuration](#local-configuration----dev-qualityyaml)
 - [Individual hooks](#individual-hooks)
 - [Local development](#local-development)
@@ -89,7 +90,7 @@ Add to the target project's `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/lipex360x/dev-quality
-    rev: v0.1.1
+    rev: v0.2.1
     hooks:
       - id: check-all
 ```
@@ -130,6 +131,28 @@ uvx --from git+https://github.com/lipex360x/dev-quality check-bash-tests /path/t
 
 # Check every Bash script calls log::init_script
 uvx --from git+https://github.com/lipex360x/dev-quality check-bash-logs /path/to/project
+```
+
+<div align="right"><a href="#dev-quality">↑ Back to top</a></div>
+
+---
+
+## check-all behavior
+
+- **`.gitignore` respected** — file collection uses `git ls-files` when the target is a git repository, so ignored files and directories are never checked. Falls back to recursive scan when outside a git repo.
+- **No side effects** — running `check-all` inside the target project does not create `.mypy_cache/`, `.ruff_cache/`, or any other cache directory there. Cache flags (`--no-incremental`, `--no-cache`) are passed automatically.
+- **Summary at the end** — after all findings are printed, a table shows the per-checker status and total issue count:
+
+```
+──────────────────────────────────────
+ check-abbrev       FAIL   12 issues
+ check-comments     PASS
+ ruff check         FAIL   15 issues
+ mypy               PASS
+ ...
+──────────────────────────────────────
+ Result             FAIL   27 issues
+──────────────────────────────────────
 ```
 
 <div align="right"><a href="#dev-quality">↑ Back to top</a></div>
@@ -178,7 +201,7 @@ To use specific checkers instead of `check-all`:
 ```yaml
 repos:
   - repo: https://github.com/lipex360x/dev-quality
-    rev: v0.1.1
+    rev: v0.2.1
     hooks:
       - id: check-abbrev
       - id: check-comments
