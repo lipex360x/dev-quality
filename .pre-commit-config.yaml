@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: check-all
+        name: Run all quality checks
+        entry: uv run check-all
+        language: system
+        pass_filenames: false
+        types_or: [python, shell]

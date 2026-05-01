@@ -4,7 +4,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
 from check_size import _check_bash, _check_python, _scan_file, main
 
 
@@ -100,18 +99,19 @@ def test_py_async_function_too_long(tmp_path: Path) -> None:
 
 def test_py_func_no_end_lineno(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import ast
+
     import check_size as module
 
     source = tmp_path / "ok.py"
     source.write_text("def foo():\n    pass\n", encoding="utf-8")
 
-    original = module._func_finding  # type: ignore[attr-defined]
+    original = module._func_finding
 
     def _patched(
         node: ast.FunctionDef | ast.AsyncFunctionDef, path: Path, max_func: int
     ) -> str | None:
-        node.end_lineno = None  # type: ignore[assignment]
-        return original(node, path, max_func)
+        node.end_lineno = None
+        return original(node, path, max_func)  # type: ignore[no-any-return]
 
     monkeypatch.setattr(module, "_func_finding", _patched)
     findings = _check_python(source, 100, 5)

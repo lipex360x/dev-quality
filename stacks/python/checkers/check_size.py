@@ -6,9 +6,7 @@ import re
 import sys
 from pathlib import Path
 
-_FUNC_RE = re.compile(
-    r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*\(\s*\)|^function\s+([a-zA-Z_][a-zA-Z0-9_]*)"
-)
+_FUNC_RE = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*\(\s*\)|^function\s+([a-zA-Z_][a-zA-Z0-9_]*)")
 
 
 def _py_file_findings(path: Path, line_count: int, max_file: int) -> list[str]:

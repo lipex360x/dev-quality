@@ -5,6 +5,8 @@
 Central repository for code quality tooling across stacks. Houses custom checker scripts, pre-commit hook definitions, and bootstrap scripts. Single source of truth — no more copying tools across projects.
 
 [![Version](https://img.shields.io/badge/version-v0.5.0-blue)](https://github.com/lipex360x/dev-quality/releases)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://pre-commit.com)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue?logo=python)](https://www.python.org)
 
 ---
 
@@ -243,7 +245,7 @@ max_complexity: 8
 # Maximum number of lines per file (default: 800)
 max_file_lines: 1000
 
-# Maximum number of lines per function (default: 80)
+# Maximum number of lines per function (default: 100)
 max_func_lines: 100
 
 # Python version for mypy (default: "3.11")

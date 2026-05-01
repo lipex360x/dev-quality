@@ -4,9 +4,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 import check_bash_logs as module
+import pytest
 from check_bash_logs import _has_log_init, _script_needs_log, check_bash_logs, main
 
 

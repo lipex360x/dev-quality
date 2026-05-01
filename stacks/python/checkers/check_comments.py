@@ -35,7 +35,11 @@ def check_python_file(path: Path) -> list[str]:
         pep723 = _pep723_block_lines(source)
         tokens = tokenize.generate_tokens(io.StringIO(source).readline)
         for tok_type, tok_string, (lineno, _), _, _ in tokens:
-            if tok_type == tokenize.COMMENT and lineno not in pep723 and not _PY_ALLOWED_RE.match(tok_string):
+            if (
+                tok_type == tokenize.COMMENT
+                and lineno not in pep723
+                and not _PY_ALLOWED_RE.match(tok_string)
+            ):
                 findings.append(f"COMMENT:{path}:{lineno}:{tok_string}")
     except Exception as error:
         return [f"PARSE_ERROR:{path}:{error}"]

@@ -4,9 +4,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 import check_bash_tests as module
+import pytest
 from check_bash_tests import _script_is_covered, check_bash_tests, main
 
 

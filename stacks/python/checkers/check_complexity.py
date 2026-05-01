@@ -5,9 +5,7 @@ import re
 import sys
 from pathlib import Path
 
-_FUNC_RE = re.compile(
-    r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*\(\s*\)|^function\s+([a-zA-Z_][a-zA-Z0-9_]*)"
-)
+_FUNC_RE = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*\(\s*\)|^function\s+([a-zA-Z_][a-zA-Z0-9_]*)")
 _BRANCH_RE = re.compile(r"^\s*(if|elif|for|while|until)\b")
 _CASE_BRANCH_RE = re.compile(r";;")
 
@@ -33,9 +31,7 @@ def _report_func(
         findings.append(f"COMPLEXITY:{path}:{lineno}:{name}:{score}")
 
 
-def _scan_functions(
-    lines: list[str], path: Path, max_complexity: int, findings: list[str]
-) -> None:
+def _scan_functions(lines: list[str], path: Path, max_complexity: int, findings: list[str]) -> None:
     current_func: str | None = None
     current_func_line = 0
     score = 0

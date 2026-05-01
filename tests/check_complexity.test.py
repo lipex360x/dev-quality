@@ -4,7 +4,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
 from check_complexity import _check_bash, _line_score, _scan_file, main
 
 

@@ -12,9 +12,7 @@ def _check_gh_auth() -> None:
     if not shutil.which("gh"):
         print("Error: gh CLI not found — install it from https://cli.github.com")
         sys.exit(1)
-    result = subprocess.run(  # noqa: S603
-        ["gh", "auth", "status"], capture_output=True
-    )
+    result = subprocess.run(["gh", "auth", "status"], capture_output=True)  # noqa: S603, S607
     if result.returncode != 0:
         print("Error: gh CLI not authenticated — run: gh auth login")
         sys.exit(1)
@@ -39,7 +37,7 @@ def _extract_changelog_entry(root: Path, version: str) -> str:
 
 def _tag_exists(version: str) -> bool:
     result = subprocess.run(  # noqa: S603
-        ["git", "tag", "--list", f"v{version}"],
+        ["git", "tag", "--list", f"v{version}"],  # noqa: S607
         capture_output=True,
         text=True,
     )
@@ -47,10 +45,10 @@ def _tag_exists(version: str) -> bool:
 
 
 def _create_release(tag: str, notes: str) -> None:
-    subprocess.run(["git", "tag", tag], check=True)  # noqa: S603
-    subprocess.run(["git", "push", "origin", tag], check=True)  # noqa: S603
+    subprocess.run(["git", "tag", tag], check=True)  # noqa: S603, S607
+    subprocess.run(["git", "push", "origin", tag], check=True)  # noqa: S603, S607
     subprocess.run(  # noqa: S603
-        ["gh", "release", "create", tag, "--title", tag, "--notes", notes],
+        ["gh", "release", "create", tag, "--title", tag, "--notes", notes],  # noqa: S607
         check=True,
     )
     print(f"Released {tag}")

@@ -7,15 +7,60 @@ from pathlib import Path
 
 import yaml
 
-_DEFAULT_DENYLIST: frozenset[str] = frozenset([
-    "attr", "buf", "cfg", "cmd", "col", "ctx", "db", "dest", "doc", "dst",
-    "elem", "env", "err", "exc", "ext", "fmt", "fn", "func", "idx", "img",
-    "mod", "msg", "num", "obj", "opts", "pkg", "ref", "req", "res", "sep",
-    "src", "tmp", "usr", "val", "var",
-])
-_DEFAULT_ALLOWLIST: frozenset[str] = frozenset([
-    "self", "cls", "args", "kwargs", "i", "j", "k", "_", "id", "ok", "io",
-])
+_DEFAULT_DENYLIST: frozenset[str] = frozenset(
+    [
+        "attr",
+        "buf",
+        "cfg",
+        "cmd",
+        "col",
+        "ctx",
+        "db",
+        "dest",
+        "doc",
+        "dst",
+        "elem",
+        "env",
+        "err",
+        "exc",
+        "ext",
+        "fmt",
+        "fn",
+        "func",
+        "idx",
+        "img",
+        "mod",
+        "msg",
+        "num",
+        "obj",
+        "opts",
+        "pkg",
+        "ref",
+        "req",
+        "res",
+        "sep",
+        "src",
+        "tmp",
+        "usr",
+        "val",
+        "var",
+    ]
+)
+_DEFAULT_ALLOWLIST: frozenset[str] = frozenset(
+    [
+        "self",
+        "cls",
+        "args",
+        "kwargs",
+        "i",
+        "j",
+        "k",
+        "_",
+        "id",
+        "ok",
+        "io",
+    ]
+)
 _DEFAULT_LANG: dict[str, frozenset[str]] = {"sh": frozenset(["dest"])}
 
 
