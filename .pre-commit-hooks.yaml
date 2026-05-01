@@ -41,3 +41,11 @@
   language: python
   pass_filenames: false
   types: [shell]
+
+- id: check-all
+  name: Run all quality checks
+  description: Runs all checkers, ruff, mypy, shellcheck, and more. Reads .dev-quality.yaml if present.
+  entry: check-all
+  language: python
+  pass_filenames: false
+  types_or: [python, shell]

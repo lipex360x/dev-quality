@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+import yaml
 
-from check_all import _collect, _run, _run_on_dir, _run_on_files, main
+from check_all import _collect, _load_config, _run, _run_on_dir, _run_on_files, main
 
 
 def _make_files(tmp_path: Path, names: list[str]) -> list[Path]:
@@ -18,6 +20,12 @@ def _make_files(tmp_path: Path, names: list[str]) -> list[Path]:
         path.touch()
         files.append(path)
     return files
+
+
+def _write_config(tmp_path: Path, data: dict[str, object]) -> None:
+    (tmp_path / ".dev-quality.yaml").write_text(
+        yaml.dump(data), encoding="utf-8"
+    )
 
 
 def test_collect_finds_py_and_sh(tmp_path: Path) -> None:
@@ -59,6 +67,22 @@ def test_collect_returns_sorted(tmp_path: Path) -> None:
     assert names == sorted(names)
 
 
+def test_load_config_returns_empty_when_no_file(tmp_path: Path) -> None:
+    assert _load_config(tmp_path) == {}
+
+
+def test_load_config_returns_empty_for_empty_file(tmp_path: Path) -> None:
+    (tmp_path / ".dev-quality.yaml").write_text("", encoding="utf-8")
+    assert _load_config(tmp_path) == {}
+
+
+def test_load_config_reads_yaml(tmp_path: Path) -> None:
+    _write_config(tmp_path, {"line_length": 120, "skip": ["mypy"]})
+    config = _load_config(tmp_path)
+    assert config["line_length"] == 120
+    assert config["skip"] == ["mypy"]
+
+
 def test_run_returns_code_and_output() -> None:
     with patch("subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=0, stdout="ok\n", stderr="")
@@ -74,6 +98,22 @@ def test_run_combines_stdout_and_stderr() -> None:
     assert code == 1
     assert "out" in output
     assert "err" in output
+
+
+def test_run_passes_extra_env() -> None:
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+        _run(["cmd"], {"MY_VAR": "value"})
+    env_passed = mock_run.call_args[1]["env"]
+    assert env_passed["MY_VAR"] == "value"
+    assert "PATH" in env_passed
+
+
+def test_run_no_extra_env_passes_none() -> None:
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+        _run(["cmd"])
+    assert mock_run.call_args[1].get("env") is None
 
 
 def test_run_on_files_skips_when_empty(tmp_path: Path) -> None:
@@ -105,6 +145,16 @@ def test_run_on_files_returns_false_on_nonzero(tmp_path: Path) -> None:
     assert "ABBREV:a.py:1:ext" in findings
 
 
+def test_run_on_files_passes_extra_env(tmp_path: Path) -> None:
+    files = _make_files(tmp_path, ["a.sh"])
+    findings: list[str] = []
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+        _run_on_files(["check-complexity"], files, findings, {"CHECK_COMPLEXITY_MAX": "8"})
+    env_passed = mock_run.call_args[1]["env"]
+    assert env_passed["CHECK_COMPLEXITY_MAX"] == "8"
+
+
 def test_run_on_dir_passes_root(tmp_path: Path) -> None:
     findings: list[str] = []
     with patch("subprocess.run") as mock_run:
@@ -121,6 +171,15 @@ def test_run_on_dir_returns_false_on_nonzero(tmp_path: Path) -> None:
         result = _run_on_dir(["check-bash-logs"], tmp_path, findings)
     assert result is False
     assert "MISSING_LOG:foo.sh" in findings
+
+
+def test_run_on_dir_passes_extra_env(tmp_path: Path) -> None:
+    findings: list[str] = []
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+        _run_on_dir(["check-bash-logs"], tmp_path, findings, {"MY_VAR": "x"})
+    env_passed = mock_run.call_args[1]["env"]
+    assert env_passed["MY_VAR"] == "x"
 
 
 def test_main_exits_0_when_all_pass(
@@ -187,3 +246,167 @@ def test_main_skips_py_tools_when_no_py_files(
     called_commands = [call[0][0] for call in mock_run.call_args_list]
     assert not any("ruff" in cmd for cmd in called_commands)
     assert not any("mypy" in cmd for cmd in called_commands)
+
+
+def test_main_skip_config_prevents_checker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "ok.py").touch()
+    _write_config(tmp_path, {"skip": ["mypy", "vulture"]})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("subprocess.run", return_value=ok) as mock_run:
+        with pytest.raises(SystemExit):
+            main()
+    called_commands = [call[0][0] for call in mock_run.call_args_list]
+    assert not any("mypy" in cmd for cmd in called_commands)
+    assert not any("vulture" in cmd for cmd in called_commands)
+
+
+def test_main_line_length_passed_to_ruff(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "ok.py").touch()
+    _write_config(tmp_path, {"line_length": 120})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("subprocess.run", return_value=ok) as mock_run:
+        with pytest.raises(SystemExit):
+            main()
+    all_args = [arg for call in mock_run.call_args_list for arg in call[0][0]]
+    assert "120" in all_args
+
+
+def test_main_max_complexity_passed_as_env(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "script.sh").touch()
+    _write_config(tmp_path, {"max_complexity": 10})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    envs_seen: list[dict[str, str]] = []
+
+    def capture_run(cmd: list[str], **kwargs: object) -> MagicMock:
+        if kwargs.get("env"):
+            envs_seen.append(dict(kwargs["env"]))  # type: ignore[arg-type]
+        return ok
+
+    with patch("subprocess.run", side_effect=capture_run):
+        with pytest.raises(SystemExit):
+            main()
+    assert any(env.get("CHECK_COMPLEXITY_MAX") == "10" for env in envs_seen)
+
+
+def test_main_size_config_passed_as_env(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "ok.py").touch()
+    _write_config(tmp_path, {"max_file_lines": 500, "max_func_lines": 40})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    envs_seen: list[dict[str, str]] = []
+
+    def capture_run(cmd: list[str], **kwargs: object) -> MagicMock:
+        if kwargs.get("env"):
+            envs_seen.append(dict(kwargs["env"]))  # type: ignore[arg-type]
+        return ok
+
+    with patch("subprocess.run", side_effect=capture_run):
+        with pytest.raises(SystemExit):
+            main()
+    assert any(env.get("CHECK_SIZE_MAX_FILE") == "500" for env in envs_seen)
+    assert any(env.get("CHECK_SIZE_MAX_FUNC") == "40" for env in envs_seen)
+
+
+def test_main_skip_custom_file_checker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "ok.py").touch()
+    _write_config(tmp_path, {"skip": ["check-abbrev"]})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("subprocess.run", return_value=ok) as mock_run:
+        with pytest.raises(SystemExit):
+            main()
+    called_commands = [call[0][0] for call in mock_run.call_args_list]
+    assert not any("check-abbrev" in cmd for cmd in called_commands)
+
+
+def test_main_skip_custom_dir_checker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "script.sh").touch()
+    _write_config(tmp_path, {"skip": ["check-bash-logs"]})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("subprocess.run", return_value=ok) as mock_run:
+        with pytest.raises(SystemExit):
+            main()
+    called_commands = [call[0][0] for call in mock_run.call_args_list]
+    assert not any("check-bash-logs" in cmd for cmd in called_commands)
+
+
+def test_main_skip_ruff(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "ok.py").touch()
+    _write_config(tmp_path, {"skip": ["ruff"]})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("subprocess.run", return_value=ok) as mock_run:
+        with pytest.raises(SystemExit):
+            main()
+    called_commands = [call[0][0] for call in mock_run.call_args_list]
+    assert not any("ruff" in cmd for cmd in called_commands)
+
+
+def test_main_skip_bandit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "ok.py").touch()
+    _write_config(tmp_path, {"skip": ["bandit"]})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("subprocess.run", return_value=ok) as mock_run:
+        with pytest.raises(SystemExit):
+            main()
+    called_commands = [call[0][0] for call in mock_run.call_args_list]
+    assert not any("bandit" in cmd for cmd in called_commands)
+
+
+def test_main_skip_pylint(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "ok.py").touch()
+    _write_config(tmp_path, {"skip": ["pylint"]})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("subprocess.run", return_value=ok) as mock_run:
+        with pytest.raises(SystemExit):
+            main()
+    called_commands = [call[0][0] for call in mock_run.call_args_list]
+    assert not any("pylint" in cmd for cmd in called_commands)
+
+
+def test_main_python_version_passed_to_mypy(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "ok.py").touch()
+    _write_config(tmp_path, {"python_version": "3.12"})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("subprocess.run", return_value=ok) as mock_run:
+        with pytest.raises(SystemExit):
+            main()
+    all_args = [arg for call in mock_run.call_args_list for arg in call[0][0]]
+    assert "3.12" in all_args
