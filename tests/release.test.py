@@ -12,6 +12,7 @@ from release import (
     _extract_changelog_entry,
     _read_version,
     _tag_exists,
+    _update_readme_version,
     main,
 )
 
@@ -257,3 +258,52 @@ def test_main_passes_changelog_notes_to_create_release(
     notes_arg = mock_create.call_args[0][1]
     assert "new feature" in notes_arg
     assert "bug fix" not in notes_arg
+
+
+_README_WITH_BADGE = (
+    "[![Version](https://img.shields.io/badge/version-v0.5.0-blue)]"
+    "(https://github.com/lipex360x/dev-quality/releases)\n"
+)
+_README_WITHOUT_BADGE = "# dev-quality\n\nNo badge here.\n"
+
+
+def test_update_readme_version_rewrites_badge(tmp_path: Path) -> None:
+    (tmp_path / "README.md").write_text(_README_WITH_BADGE, encoding="utf-8")
+    _update_readme_version(tmp_path, "1.2.3")
+    content = (tmp_path / "README.md").read_text(encoding="utf-8")
+    assert "v1.2.3" in content
+
+
+def test_update_readme_version_removes_old_version(tmp_path: Path) -> None:
+    (tmp_path / "README.md").write_text(_README_WITH_BADGE, encoding="utf-8")
+    _update_readme_version(tmp_path, "1.2.3")
+    content = (tmp_path / "README.md").read_text(encoding="utf-8")
+    assert "v0.5.0" not in content
+
+
+def test_update_readme_version_no_op_when_badge_absent(tmp_path: Path) -> None:
+    (tmp_path / "README.md").write_text(_README_WITHOUT_BADGE, encoding="utf-8")
+    _update_readme_version(tmp_path, "1.2.3")
+    content = (tmp_path / "README.md").read_text(encoding="utf-8")
+    assert content == _README_WITHOUT_BADGE
+
+
+def test_update_readme_version_no_op_when_readme_absent(tmp_path: Path) -> None:
+    _update_readme_version(tmp_path, "1.2.3")
+
+
+def test_main_updates_readme_before_release(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "pyproject.toml").write_text(_PYPROJECT, encoding="utf-8")
+    (tmp_path / "CHANGELOG.md").write_text(_CHANGELOG, encoding="utf-8")
+    (tmp_path / "README.md").write_text(_README_WITH_BADGE, encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["release.py"])
+    with (
+        patch("release._tag_exists", return_value=False),
+        patch("release._create_release"),
+    ):
+        main(root=tmp_path)
+    content = (tmp_path / "README.md").read_text(encoding="utf-8")
+    assert "v1.2.3" in content

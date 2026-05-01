@@ -35,6 +35,20 @@ def _extract_changelog_entry(root: Path, version: str) -> str:
     return match.group(1).strip()
 
 
+def _update_readme_version(root: Path, version: str) -> None:
+    readme = root / "README.md"
+    if not readme.exists():
+        return
+    text = readme.read_text(encoding="utf-8")
+    updated = re.sub(
+        r"(https://img\.shields\.io/badge/version-)v[\d.]+(-blue)",
+        rf"\g<1>v{version}\2",
+        text,
+    )
+    if updated != text:
+        readme.write_text(updated, encoding="utf-8")
+
+
 def _tag_exists(version: str) -> bool:
     result = subprocess.run(  # noqa: S603
         ["git", "tag", "--list", f"v{version}"],  # noqa: S607
@@ -67,6 +81,7 @@ def main(root: Path | None = None) -> None:
         sys.exit(1)
 
     notes = _extract_changelog_entry(root, version)
+    _update_readme_version(root, version)
 
     if dry_run:
         print(f"Version:  {version}")
