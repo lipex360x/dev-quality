@@ -115,7 +115,17 @@ check-abbrev src/main.py
 
 ### Automated on every commit — pre-commit
 
-Add to the target project's `.pre-commit-config.yaml`:
+[pre-commit](https://pre-commit.com) is a tool that runs checks automatically every time you run `git commit`. If any checker fails, the commit is blocked until the issue is fixed — no bad code reaches the repository.
+
+**1. Install pre-commit** (once per machine):
+
+```bash
+pip install pre-commit
+# or
+brew install pre-commit
+```
+
+**2. Create `.pre-commit-config.yaml`** at the root of the target project:
 
 ```yaml
 repos:
@@ -125,11 +135,19 @@ repos:
       - id: check-all
 ```
 
-Then install the hooks:
+**3. Activate the hooks** in that project (once per clone):
 
 ```bash
 pre-commit install
 ```
+
+From this point on, every `git commit` runs all checkers automatically. If a check fails, the commit is aborted and the findings are printed so you can fix them before trying again.
+
+> [!TIP]
+> To run all checkers manually without committing:
+> ```bash
+> pre-commit run --all-files
+> ```
 
 <div align="right"><a href="#dev-quality">↑ Back to top</a></div>
 
