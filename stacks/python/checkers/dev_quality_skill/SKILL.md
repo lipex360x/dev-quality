@@ -15,6 +15,48 @@ allowed-tools:
 This project runs dev-quality on every commit. The rules below are what the
 checkers enforce. Follow them while writing — not after.
 
+## Commands
+
+### check-all
+
+Runs the full checker suite against a directory.
+
+| Invocation | What it does |
+|---|---|
+| `check-all .` | Run all checkers against the current directory |
+| `check-all /path/to/project` | Run against a specific path |
+| `check-all --no-cache .` | Run without ruff/mypy cache (slower, no state written) |
+| `check-all --clear-cache` | Delete the cache at `/tmp/dev-quality/` and exit |
+
+### Individual file checkers
+
+Accept one or more file paths. Run automatically by `check-all`.
+
+| Command | What it checks |
+|---|---|
+| `check-abbrev <files>` | Banned abbreviations in identifiers |
+| `check-comments <files>` | Inline and block comments |
+| `check-size <files>` | File and function line limits |
+| `check-complexity <files>` | Cyclomatic complexity of Bash functions |
+
+### Directory checkers
+
+Accept a project root. Run automatically by `check-all`.
+
+| Command | What it checks |
+|---|---|
+| `check-bash-tests <root>` | Every `.sh` outside `hooks/` and `tests/` has a paired test |
+| `check-bash-logs <root>` | Every `.sh` outside `hooks/`, `tests/`, and `lib/` calls `log::init_script` |
+
+### Skill installer
+
+| Invocation | What it does |
+|---|---|
+| `install-skill` | Copy `SKILL.md` to `~/.claude/skills/dev-quality/` |
+| `install-skill --target <dir>` | Copy to a custom skills directory |
+
+---
+
 ## Active limits
 
 The defaults below apply unconditionally. If `.dev-quality.yaml` exists at
