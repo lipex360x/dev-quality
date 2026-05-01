@@ -88,6 +88,28 @@ def test_collect_uses_git_ls_files_in_repo(tmp_path: Path) -> None:
     assert "ignored.py" not in names
 
 
+def test_collect_skips_staged_but_deleted_from_disk(tmp_path: Path) -> None:
+    subprocess.run(["git", "init"], cwd=str(tmp_path), check=True, capture_output=True)  # noqa: S607
+    subprocess.run(
+        ["git", "config", "user.email", "t@t.com"],  # noqa: S607
+        cwd=str(tmp_path),
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "T"],  # noqa: S607
+        cwd=str(tmp_path),
+        check=True,
+        capture_output=True,
+    )
+    ghost = tmp_path / "ghost.sh"
+    ghost.write_text("#!/bin/bash\n")
+    subprocess.run(["git", "add", "ghost.sh"], cwd=str(tmp_path), check=True, capture_output=True)  # noqa: S607
+    ghost.unlink()
+    result = _collect(tmp_path, frozenset([".sh"]))
+    assert all(p.name != "ghost.sh" for p in result)
+
+
 def test_load_config_returns_empty_when_no_file(tmp_path: Path) -> None:
     assert _load_config(tmp_path) == {}
 

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.6.1] — 2026-05-01
+
+### Fixed
+- `_collect()` no longer includes files that are staged in the git index but deleted from the working tree (`AD` status) — previously caused `PARSE_ERROR` and `READ_ERROR` for non-existent files
+
+---
+
 ## [v0.6.0] — 2026-05-01
 
 ### Added

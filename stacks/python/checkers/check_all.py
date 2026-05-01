@@ -34,7 +34,9 @@ def _collect(root: Path, suffixes: frozenset[str]) -> list[Path]:
             check=True,
         )
         lines = [line for line in result.stdout.splitlines() if line]
-        return sorted(root / line for line in lines if Path(line).suffix in suffixes)
+        return sorted(
+            path for line in lines if (path := root / line).suffix in suffixes and path.is_file()
+        )
     except subprocess.CalledProcessError:
         return sorted(
             path
