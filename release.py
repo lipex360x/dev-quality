@@ -1,10 +1,23 @@
 from __future__ import annotations
 
 import re
+import shutil
 import subprocess
 import sys
 import tomllib
 from pathlib import Path
+
+
+def _check_gh_auth() -> None:
+    if not shutil.which("gh"):
+        print("Error: gh CLI not found — install it from https://cli.github.com")
+        sys.exit(1)
+    result = subprocess.run(  # noqa: S603
+        ["gh", "auth", "status"], capture_output=True
+    )
+    if result.returncode != 0:
+        print("Error: gh CLI not authenticated — run: gh auth login")
+        sys.exit(1)
 
 
 def _read_version(root: Path) -> str:
@@ -45,6 +58,7 @@ def _create_release(tag: str, notes: str) -> None:
 
 def main(root: Path | None = None) -> None:
     dry_run = "--dry-run" in sys.argv
+    _check_gh_auth()
     if root is None:
         root = Path(__file__).parent
     version = _read_version(root)

@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, call, patch
 import pytest
 
 from release import (
+    _check_gh_auth,
     _create_release,
     _extract_changelog_entry,
     _read_version,
@@ -135,6 +136,55 @@ def test_create_release_order_is_tag_push_gh() -> None:
         _create_release("v1.0.0", "notes")
     first_args = [call[0][0][0] for call in mock_run.call_args_list]
     assert first_args == ["git", "git", "gh"]
+
+
+# --- _check_gh_auth ---
+
+
+def test_check_gh_auth_exits_when_gh_not_installed() -> None:
+    with patch("shutil.which", return_value=None):
+        with pytest.raises(SystemExit) as raised:
+            _check_gh_auth()
+    assert raised.value.code == 1
+
+
+def test_check_gh_auth_exits_when_not_authenticated() -> None:
+    with patch("shutil.which", return_value="/usr/bin/gh"):
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=1)
+            with pytest.raises(SystemExit) as raised:
+                _check_gh_auth()
+    assert raised.value.code == 1
+
+
+def test_check_gh_auth_passes_when_authenticated() -> None:
+    with patch("shutil.which", return_value="/usr/bin/gh"):
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            _check_gh_auth()
+
+
+def test_check_gh_auth_runs_gh_auth_status() -> None:
+    with patch("shutil.which", return_value="/usr/bin/gh"):
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            _check_gh_auth()
+    args = mock_run.call_args[0][0]
+    assert args == ["gh", "auth", "status"]
+
+
+def test_main_runs_preflight_before_tag_check(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "pyproject.toml").write_text(_PYPROJECT, encoding="utf-8")
+    (tmp_path / "CHANGELOG.md").write_text(_CHANGELOG, encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["release.py"])
+    with patch("release._check_gh_auth") as mock_preflight:
+        with patch("release._tag_exists", return_value=True):
+            with pytest.raises(SystemExit):
+                main(root=tmp_path)
+    mock_preflight.assert_called_once()
 
 
 # --- main() ---
