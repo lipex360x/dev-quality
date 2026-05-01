@@ -15,15 +15,18 @@ allowed-tools:
 This project runs dev-quality on every commit. The rules below are what the
 checkers enforce. Follow them while writing — not after.
 
-## Pre-flight
+## Active limits
 
-Read `.dev-quality.yaml` if it exists at the project root — it overrides the
-defaults listed here. Any limit shown as "(default)" may be higher or lower in
-this project.
+The defaults below apply unconditionally. If `.dev-quality.yaml` exists at
+the project root, read it and use those values instead — but when it is absent,
+the defaults are already in effect; no file needed.
 
-```bash
-cat .dev-quality.yaml 2>/dev/null || echo "(no local overrides — defaults apply)"
-```
+| Limit | Default |
+|-------|---------|
+| Lines per file | 800 |
+| Lines per function | 100 |
+| Cyclomatic complexity (Bash) | 6 |
+| Line length | 100 |
 
 ## Banned abbreviations
 
@@ -87,15 +90,7 @@ No comments in `.py` or `.sh` files. The only exceptions:
 
 If you feel like writing a comment, rename the variable or extract a function instead.
 
-## Size limits
-
-| Limit | Default | Config key |
-|-------|---------|------------|
-| Lines per file | 800 | `max_file_lines` |
-| Lines per function | 100 | `max_func_lines` |
-
-Applies to both `.py` and `.sh`. Empty lines count toward the total.
-
+Size limits apply to both `.py` and `.sh`. Empty lines count toward the total.
 If a function is approaching the limit, split it before finishing — extracting
 a helper after the fact is more disruptive than designing for it upfront.
 
@@ -156,19 +151,22 @@ Create `tests/deploy.test.sh` when you create `scripts/deploy.sh`.
 Every `.sh` outside `hooks/`, `tests/`, and `lib/` must call `log::init_script`
 near the top of the file.
 
-## Local configuration
+## Local overrides (optional)
 
-Always check `.dev-quality.yaml` first — it sets the real active limits:
+If `.dev-quality.yaml` exists at the project root, it overrides the defaults
+from the "Active limits" table above. Read it before starting any task.
 
 ```yaml
-max_file_lines: 1000
-max_func_lines: 120
-max_complexity: 8
-line_length: 120
+max_file_lines: 1000   # overrides 800
+max_func_lines: 120    # overrides 100
+max_complexity: 8      # overrides 6
+line_length: 120       # overrides 100
 python_version: "3.12"
 skip:
   - check-bash-logs
 ```
+
+If the file does not exist — including when running via `uvx` — the defaults apply as-is.
 
 ## Self-audit before finishing
 
@@ -176,8 +174,8 @@ Before reporting a task as done:
 
 1. No banned abbreviations used as identifiers
 2. No comments written (except the allowed exceptions)
-3. No function exceeds `max_func_lines` lines (check `.dev-quality.yaml`)
-4. No file exceeds `max_file_lines` lines (check `.dev-quality.yaml`)
+3. No function exceeds the active `max_func_lines` limit (100 unless overridden)
+4. No file exceeds the active `max_file_lines` limit (800 unless overridden)
 5. All nested `with` statements are combined
 6. All imports are sorted and grouped correctly
 7. All functions have complete type annotations (Python)
