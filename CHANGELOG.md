@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.7.0] — 2026-05-01
+
+### Changed
+- `release.py` now reads the version from CHANGELOG (source of truth) instead of `pyproject.toml`
+- `release.py` now updates `pyproject.toml` and the README badge automatically — no manual edits needed
+- New `--release` flag: tag + GitHub Release only created when this flag is passed; default run commits version bump only
+- `_commit_readme_version` replaced by `_commit_version_bump` which stages both `pyproject.toml` and `README.md`
+
+---
+
 ## [v0.6.1] — 2026-05-01
 
 ### Fixed

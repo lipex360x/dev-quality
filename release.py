@@ -4,7 +4,6 @@ import re
 import shutil
 import subprocess
 import sys
-import tomllib
 from pathlib import Path
 
 
@@ -18,9 +17,13 @@ def _check_gh_auth() -> None:
         sys.exit(1)
 
 
-def _read_version(root: Path) -> str:
-    data = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
-    return str(data["project"]["version"])
+def _read_version_from_changelog(root: Path) -> str:
+    text = (root / "CHANGELOG.md").read_text(encoding="utf-8")
+    match = re.search(r"## \[v([\d.]+)\]", text)
+    if not match:
+        print("Error: no version found in CHANGELOG.md")
+        sys.exit(1)
+    return match.group(1)
 
 
 def _extract_changelog_entry(root: Path, version: str) -> str:
@@ -33,6 +36,21 @@ def _extract_changelog_entry(root: Path, version: str) -> str:
     if not match:
         return ""
     return match.group(1).strip()
+
+
+def _update_pyproject_version(root: Path, version: str) -> bool:
+    pyproject = root / "pyproject.toml"
+    text = pyproject.read_text(encoding="utf-8")
+    updated = re.sub(
+        r'^(version\s*=\s*")[^"]+(")',
+        rf"\g<1>{version}\2",
+        text,
+        flags=re.MULTILINE,
+    )
+    if updated == text:
+        return False
+    pyproject.write_text(updated, encoding="utf-8")
+    return True
 
 
 def _update_readme_version(root: Path, version: str) -> bool:
@@ -51,10 +69,12 @@ def _update_readme_version(root: Path, version: str) -> bool:
     return True
 
 
-def _commit_readme_version(root: Path, version: str) -> None:
-    subprocess.run(["git", "add", "README.md"], cwd=str(root), check=True)  # noqa: S603, S607
+def _commit_version_bump(root: Path, version: str) -> None:
+    subprocess.run(  # noqa: S603, S607
+        ["git", "add", "pyproject.toml", "README.md"], cwd=str(root), check=True
+    )
     subprocess.run(  # noqa: S603
-        ["git", "commit", "-m", f"chore: bump README version badge to v{version}"],  # noqa: S607
+        ["git", "commit", "-m", f"chore: bump version to v{version}"],  # noqa: S607
         cwd=str(root),
         check=True,
     )
@@ -80,20 +100,25 @@ def _create_release(tag: str, notes: str) -> None:
     print(f"Released {tag}")
 
 
-def main(root: Path | None = None) -> None:
-    dry_run = "--dry-run" in sys.argv
+def _preflight_release(version: str, tag: str) -> None:
     _check_gh_auth()
-    if root is None:
-        root = Path(__file__).parent
-    version = _read_version(root)
-    tag = f"v{version}"
-
     if _tag_exists(version):
         print(f"Error: tag {tag} already exists")
         sys.exit(1)
 
+
+def main(root: Path | None = None) -> None:
+    dry_run = "--dry-run" in sys.argv
+    release = "--release" in sys.argv
+    if root is None:
+        root = Path(__file__).parent
+    version = _read_version_from_changelog(root)
+    tag = f"v{version}"
+
+    if release:
+        _preflight_release(version, tag)
+
     notes = _extract_changelog_entry(root, version)
-    readme_changed = _update_readme_version(root, version)
 
     if dry_run:
         print(f"Version:  {version}")
@@ -101,9 +126,14 @@ def main(root: Path | None = None) -> None:
         print(f"Notes:\n{notes}")
         return
 
-    if readme_changed:
-        _commit_readme_version(root, version)
-    _create_release(tag, notes)
+    pyproject_changed = _update_pyproject_version(root, version)
+    readme_changed = _update_readme_version(root, version)
+
+    if pyproject_changed or readme_changed:
+        _commit_version_bump(root, version)
+
+    if release:
+        _create_release(tag, notes)
 
 
 if __name__ == "__main__":

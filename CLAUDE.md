@@ -117,19 +117,23 @@ uv run release.py --dry-run  # preview first
 uv run release.py            # creates tag, pushes, creates GitHub Release
 ```
 
-The script reads the version from `pyproject.toml`, extracts the matching CHANGELOG
-section automatically, updates the README version badge, commits it if changed, and runs
-`git tag` + `git push origin <tag>` + `gh release create` in sequence.
+CHANGELOG is the **source of truth** for the version. The script reads the top entry,
+updates `pyproject.toml` and the README badge automatically, and commits those changes.
+Never update `pyproject.toml` or the README badge manually — `release.py` handles both.
 Never use manual `git tag` / `git push` / `gh release create` — always use the script.
 
-**On every behavior-changing commit, update before running release.py:**
-1. `pyproject.toml` → `[project] version`
-2. `CHANGELOG.md` → add entry under the new version
-3. `stacks/python/checkers/dev_quality_skill/SKILL.md` → reflect any new or changed rule (new checker, new banned abbreviation, new config key, changed default)
-4. Commit
-5. `uv run release.py` → updates README badge automatically, commits it, creates tag, pushes, creates GitHub Release
+**On every behavior-changing commit:**
+1. `CHANGELOG.md` → add entry under the new version (this sets the version)
+2. `stacks/python/checkers/dev_quality_skill/SKILL.md` → reflect any new or changed rule
+3. Commit
+4. `uv run release.py --release` → reads version from CHANGELOG, updates `pyproject.toml` + README badge, commits those, creates tag, pushes, creates GitHub Release
 
-Do **not** update `README.md` manually — `release.py` handles the version badge.
+**For documentation-only commits** (README prose, CLAUDE.md, guides): commit normally, do **not** run `release.py`.
+
+**Two modes:**
+- `uv run release.py` — updates `pyproject.toml` + README badge + commits, no tag/release
+- `uv run release.py --release` — same as above, then creates tag + GitHub Release
+- `uv run release.py --dry-run` — preview only, no git operations
 
 **Only tag when the package behavior changes** — new checker, bug fix that affects output, new config param, new command, new hook. Do NOT tag for docs, CLAUDE.md updates, status changes, or test-only commits.
 
