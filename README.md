@@ -123,9 +123,16 @@ check-abbrev src/main.py
 **1. Install pre-commit** (once per machine):
 
 ```bash
+# Cross-platform
 pip install pre-commit
-# or
+
+# macOS
 brew install pre-commit
+
+# Windows
+winget install pre-commit
+# or: scoop install pre-commit
+# or: choco install pre-commit
 ```
 
 **2. Create `.pre-commit-config.yaml`** at the root of the target project:
