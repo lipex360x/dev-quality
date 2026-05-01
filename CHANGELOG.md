@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.4.0] — 2026-05-01
+
+### Added
+- `--clear-cache` flag: removes `/tmp/dev-quality/` and exits
+- `--no-cache` flag: disables ruff and mypy caching for the current run
+- Cache hint printed after every run showing the cache location and both management commands
+- `Scanning <root> ...` message printed at start so the terminal is never silent
+- Per-checker findings now printed immediately as each checker completes (instead of batched at end)
+
+### Changed
+- Default cache behavior: ruff and mypy caches now go to `/tmp/dev-quality/{ruff,mypy}` (cross-platform via `tempfile.gettempdir()`) instead of being disabled — no pollution in the target project, cache persists within the session
+- Checkers table in README reorganised by stack (Shared, Python, Bash)
+
+---
+
+## [v0.3.0] — 2026-05-01
+
+### Added
+- `--no-cache` flag for `check-all`: disables ruff and mypy caching for a single run
+
+### Changed
+- Default cache behavior: ruff (`--cache-dir`) and mypy (`--cache-dir`) now write to `/tmp/dev-quality/` instead of the target project
+
+---
+
+## [v0.2.1] — 2026-05-01
+
+### Fixed
+- `check-all` no longer creates `.ruff_cache/` or `.mypy_cache/` in the target project when run from inside it — `--no-cache` passed to ruff, `--no-incremental` to mypy
+
+---
+
+## [v0.2.0] — 2026-05-01
+
+### Added
+- `_collect()` now uses `git ls-files --cached --others --exclude-standard` so `.gitignore` is respected; falls back to `rglob` when not in a git repo
+- `ruff check` now passes `--extend-ignore S101` to suppress false positives on `assert` in pytest files
+- Formatted summary table at the end of every `check-all` run showing per-checker issue counts and total result
+
+---
+
 ## [v0.1.1] — 2026-05-01
 
 ### Added

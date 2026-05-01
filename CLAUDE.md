@@ -117,6 +117,12 @@ git tag v<new-version>
 git push origin v<new-version>
 ```
 
+**On every behavior-changing commit, update before tagging:**
+1. `pyproject.toml` → `[project] version`
+2. `CHANGELOG.md` → add entry under the new version
+3. `README.md` → version badge + any new behavior documented
+4. Tag and push
+
 **Only tag when the package behavior changes** — new checker, bug fix that affects output, new config param, new command, new hook. Do NOT tag for docs, CLAUDE.md updates, status changes, or test-only commits.
 
 **Semver rules — choose based on what was committed:**

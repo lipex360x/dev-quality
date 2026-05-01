@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -47,6 +48,15 @@ def _user_cache_dir() -> Path:
     return Path(tempfile.gettempdir()) / "dev-quality"
 
 
+def _do_clear_cache() -> None:
+    cache_dir = _user_cache_dir()
+    if cache_dir.exists():
+        shutil.rmtree(cache_dir)
+        print(f"Cache cleared: {cache_dir}")
+    else:
+        print(f"No cache found at: {cache_dir}")
+
+
 def _load_config(root: Path) -> dict[str, object]:
     config_file = root / ".dev-quality.yaml"
     if not config_file.exists():
@@ -89,6 +99,11 @@ def _run_on_dir(
     return code == 0
 
 
+def _print_findings(findings: list[str]) -> None:
+    for finding in findings:
+        print(finding)
+
+
 def _print_summary(results: dict[str, tuple[bool, int]]) -> None:
     if not results:
         return
@@ -115,10 +130,25 @@ def _print_summary(results: dict[str, tuple[bool, int]]) -> None:
     print(sep)
 
 
+def _print_cache_hint(cache_dir: Path) -> None:
+    print(f"Cache: {cache_dir}")
+    print(f"  To clear:   check-all --clear-cache")
+    print(f"  To disable: check-all --no-cache .")
+
+
 def main() -> None:
+    clear_cache = "--clear-cache" in sys.argv
     no_cache = "--no-cache" in sys.argv
-    args = [arg for arg in sys.argv[1:] if arg != "--no-cache"]
+    args = [arg for arg in sys.argv[1:] if arg not in {"--no-cache", "--clear-cache"}]
+
+    if clear_cache:
+        _do_clear_cache()
+        sys.exit(0)
+
     root = Path(args[0]).resolve() if args else Path.cwd()
+
+    print(f"Scanning {root} ...", flush=True)
+
     config = _load_config(root)
 
     skip = set(config.get("skip", []))  # type: ignore[arg-type]
@@ -131,6 +161,7 @@ def main() -> None:
     if no_cache:
         ruff_cache: list[str] = ["--no-cache"]
         mypy_cache: list[str] = ["--no-incremental"]
+        cache_dir = None
     else:
         cache_dir = _user_cache_dir()
         ruff_cache = ["--cache-dir", str(cache_dir / "ruff")]
@@ -140,7 +171,6 @@ def main() -> None:
     sh_files = _collect(root, frozenset([".sh"]))
     all_files = sorted(py_files + sh_files)
 
-    findings: list[str] = []
     results: dict[str, tuple[bool, int]] = {}
     passed = True
 
@@ -155,22 +185,24 @@ def main() -> None:
             extra_env = size_env
         elif checker == "check-complexity":
             extra_env = complexity_env
-        start = len(findings)
+        findings: list[str] = []
         ok = _run_on_files([checker], all_files, findings, extra_env)
-        results[checker] = (ok, len(findings) - start)
+        _print_findings(findings)
+        results[checker] = (ok, len(findings))
         passed &= ok
 
     for checker in _CUSTOM_DIR_CHECKERS:
         if checker in skip:
             continue
-        start = len(findings)
+        findings = []
         ok = _run_on_dir([checker], root, findings)
-        results[checker] = (ok, len(findings) - start)
+        _print_findings(findings)
+        results[checker] = (ok, len(findings))
         passed &= ok
 
     if py_files:
         if "ruff" not in skip:
-            start = len(findings)
+            findings = []
             ok = _run_on_files(
                 [
                     "ruff", "check",
@@ -181,57 +213,64 @@ def main() -> None:
                 ],
                 py_files, findings,
             )
-            results["ruff check"] = (ok, len(findings) - start)
+            _print_findings(findings)
+            results["ruff check"] = (ok, len(findings))
             passed &= ok
 
-            start = len(findings)
+            findings = []
             ok = _run_on_files(
                 ["ruff", "format", "--check", *ruff_cache, "--line-length", line_length],
                 py_files, findings,
             )
-            results["ruff format"] = (ok, len(findings) - start)
+            _print_findings(findings)
+            results["ruff format"] = (ok, len(findings))
             passed &= ok
 
         if "mypy" not in skip:
-            start = len(findings)
+            findings = []
             ok = _run_on_files(
                 ["mypy", "--strict", *mypy_cache,
                  "--python-version", python_version, "--ignore-missing-imports"],
                 py_files, findings,
             )
-            results["mypy"] = (ok, len(findings) - start)
+            _print_findings(findings)
+            results["mypy"] = (ok, len(findings))
             passed &= ok
 
         if "vulture" not in skip:
-            start = len(findings)
+            findings = []
             ok = _run_on_files(["vulture", "--min-confidence", "80"], py_files, findings)
-            results["vulture"] = (ok, len(findings) - start)
+            _print_findings(findings)
+            results["vulture"] = (ok, len(findings))
             passed &= ok
 
         if "bandit" not in skip:
-            start = len(findings)
+            findings = []
             ok = _run_on_files(["bandit", "-s", "B101,B404,B603,B607"], py_files, findings)
-            results["bandit"] = (ok, len(findings) - start)
+            _print_findings(findings)
+            results["bandit"] = (ok, len(findings))
             passed &= ok
 
         if "pylint" not in skip:
-            start = len(findings)
+            findings = []
             ok = _run_on_files(
                 ["pylint", "--disable=all", "--enable=C0103"], py_files, findings
             )
-            results["pylint"] = (ok, len(findings) - start)
+            _print_findings(findings)
+            results["pylint"] = (ok, len(findings))
             passed &= ok
 
     if sh_files and "shellcheck" not in skip:
-        start = len(findings)
+        findings = []
         ok = _run_on_files(["shellcheck"], sh_files, findings)
-        results["shellcheck"] = (ok, len(findings) - start)
+        _print_findings(findings)
+        results["shellcheck"] = (ok, len(findings))
         passed &= ok
 
-    for finding in findings:
-        print(finding)
-
     _print_summary(results)
+
+    if cache_dir is not None:
+        _print_cache_hint(cache_dir)
 
     sys.exit(0 if passed else 1)
 

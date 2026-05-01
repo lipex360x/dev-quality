@@ -528,6 +528,101 @@ def test_main_python_version_passed_to_mypy(
     assert "3.12" in all_args
 
 
+def test_main_prints_scanning_message(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("check_all._collect", return_value=[]):
+        with patch("subprocess.run", return_value=ok):
+            with pytest.raises(SystemExit):
+                main()
+    assert str(tmp_path.resolve()) in capsys.readouterr().out
+
+
+def test_main_clear_cache_does_not_print_scanning(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", "--clear-cache"])
+    with pytest.raises(SystemExit):
+        main()
+    assert "Scanning" not in capsys.readouterr().out
+
+
+def test_main_clear_cache_removes_dir(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    (cache / "ruff").mkdir()
+    monkeypatch.setattr(sys, "argv", ["check-all", "--clear-cache"])
+    with pytest.raises(SystemExit) as raised:
+        main()
+    assert raised.value.code == 0
+    assert not cache.exists()
+
+
+def test_main_clear_cache_when_nothing_exists(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", "--clear-cache"])
+    with pytest.raises(SystemExit) as raised:
+        main()
+    assert raised.value.code == 0
+    assert "No cache" in capsys.readouterr().out
+
+
+def test_main_clear_cache_prints_location(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    monkeypatch.setattr(sys, "argv", ["check-all", "--clear-cache"])
+    with pytest.raises(SystemExit):
+        main()
+    assert str(cache) in capsys.readouterr().out
+
+
+def test_main_prints_cache_hint_after_run(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])):
+        with patch("subprocess.run", return_value=ok):
+            with pytest.raises(SystemExit):
+                main()
+    out = capsys.readouterr().out
+    assert str(tmp_path / "cache") in out
+    assert "--clear-cache" in out
+    assert "--no-cache" in out
+
+
+def test_main_no_cache_flag_omits_cache_hint(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", "--no-cache", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])):
+        with patch("subprocess.run", return_value=ok):
+            with pytest.raises(SystemExit):
+                main()
+    assert "--clear-cache" not in capsys.readouterr().out
+
+
 def test_main_ruff_default_uses_cache_dir(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

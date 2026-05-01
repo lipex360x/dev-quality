@@ -4,7 +4,7 @@
 
 Central repository for code quality tooling across stacks. Houses custom checker scripts, pre-commit hook definitions, and bootstrap scripts. Single source of truth — no more copying tools across projects.
 
-[![Version](https://img.shields.io/badge/version-v0.2.1-blue)](https://github.com/lipex360x/dev-quality/releases)
+[![Version](https://img.shields.io/badge/version-v0.4.0-blue)](https://github.com/lipex360x/dev-quality/releases)
 
 ---
 
@@ -27,21 +27,33 @@ Central repository for code quality tooling across stacks. Houses custom checker
 
 ## Checkers
 
-| Hook | Languages | What it validates |
-|---|---|---|
-| `check-abbrev` | Python, Bash | Banned abbreviations (`buf`, `cfg`, `ref`, `tmp`, etc.) |
-| `check-comments` | Python, Bash | Inline and block comments (except shebangs, `# shellcheck`, `# noqa`, `# type: ignore`, PEP 723 blocks) |
-| `check-size` | Python, Bash | Files over 800 lines or functions over 80 lines |
-| `check-complexity` | Bash | Functions with cyclomatic complexity above 6 |
-| `check-bash-tests` | Bash | Every `.sh` outside `hooks/` and `tests/` must have a paired test file |
-| `check-bash-logs` | Bash | Every `.sh` outside `hooks/`, `tests/` and `lib/` must call `log::init_script` |
-| `ruff check` | Python | Linting: imports, style, bugs, McCabe complexity, security |
-| `ruff format` | Python | Code formatting |
-| `mypy` | Python | Static type checking in strict mode |
-| `vulture` | Python | Dead code (unused functions and variables) |
-| `bandit` | Python | Security vulnerabilities |
-| `pylint C0103` | Python | Variable and function naming conventions |
-| `shellcheck` | Bash | Bugs and bad practices in shell scripts |
+### Shared — Python and Bash
+
+| Hook | What it validates |
+|---|---|
+| `check-abbrev` | Banned abbreviations (`buf`, `cfg`, `ref`, `tmp`, etc.) |
+| `check-comments` | Inline and block comments (except shebangs, `# shellcheck`, `# noqa`, `# type: ignore`, PEP 723 blocks) |
+| `check-size` | Files over 800 lines or functions over 80 lines |
+
+### Python
+
+| Hook | What it validates |
+|---|---|
+| `ruff check` | Linting: imports, style, bugs, McCabe complexity, security |
+| `ruff format` | Code formatting |
+| `mypy` | Static type checking in strict mode |
+| `vulture` | Dead code (unused functions and variables) |
+| `bandit` | Security vulnerabilities |
+| `pylint C0103` | Variable and function naming conventions |
+
+### Bash
+
+| Hook | What it validates |
+|---|---|
+| `check-complexity` | Functions with cyclomatic complexity above 6 |
+| `check-bash-tests` | Every `.sh` outside `hooks/` and `tests/` must have a paired test file |
+| `check-bash-logs` | Every `.sh` outside `hooks/`, `tests/` and `lib/` must call `log::init_script` |
+| `shellcheck` | Bugs and bad practices in shell scripts |
 
 ---
 
@@ -107,7 +119,7 @@ Add to the target project's `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/lipex360x/dev-quality
-    rev: v0.2.1
+    rev: v0.4.0
     hooks:
       - id: check-all
 ```
@@ -157,8 +169,9 @@ uvx --from git+https://github.com/lipex360x/dev-quality check-bash-logs /path/to
 ## check-all behavior
 
 - **`.gitignore` respected** — file collection uses `git ls-files` when the target is a git repository, so ignored files and directories are never checked. Falls back to recursive scan when outside a git repo.
-- **No side effects** — running `check-all` inside the target project does not create `.mypy_cache/`, `.ruff_cache/`, or any other cache directory there. Cache flags (`--no-incremental`, `--no-cache`) are passed automatically.
-- **Summary at the end** — after all findings are printed, a table shows the per-checker status and total issue count:
+- **Progress as it runs** — each checker prints findings immediately; a `Scanning ...` message appears at start so the terminal is never silent.
+- **No side effects** — caches go to the system temp directory, never to the target project.
+- **Summary at the end** — per-checker status table followed by cache location and management options:
 
 ```
 ──────────────────────────────────────
@@ -170,6 +183,19 @@ uvx --from git+https://github.com/lipex360x/dev-quality check-bash-logs /path/to
 ──────────────────────────────────────
  Result             FAIL   27 issues
 ──────────────────────────────────────
+Cache: /tmp/dev-quality
+  To clear:   check-all --clear-cache
+  To disable: check-all --no-cache .
+```
+
+**Cache commands:**
+
+```bash
+# clear the cache
+check-all --clear-cache
+
+# run without using or writing cache
+check-all --no-cache .
 ```
 
 <div align="right"><a href="#dev-quality">↑ Back to top</a></div>
@@ -218,7 +244,7 @@ To use specific checkers instead of `check-all`:
 ```yaml
 repos:
   - repo: https://github.com/lipex360x/dev-quality
-    rev: v0.2.1
+    rev: v0.4.0
     hooks:
       - id: check-abbrev
       - id: check-comments
