@@ -207,8 +207,6 @@ uv run pytest
 
 All checkers live in `stacks/python/checkers/`. Tests live in `tests/`. Coverage must stay at 100%.
 
-> [!NOTE]
-> TDD is required — write the test file before the implementation. See `CLAUDE.md` for full contribution rules.
 
 <div align="right"><a href="#dev-quality">↑ Back to top</a></div>
 
