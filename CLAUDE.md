@@ -85,7 +85,8 @@ programmatically.
 - **No comments** in `.py` and `.sh` files (shebangs, `# noqa`, `# type: ignore`, `# pragma: no cover` allowed).
 - **No abbreviations**: reads `shared/abbrev-rules.yaml`.
 - **Coverage**: 100% — checkers are small enough to cover fully.
-- Checker scripts are **standalone**: only stdlib + `pyyaml`. No other runtime deps.
+- Individual checkers (`check_abbrev`, `check_comments`, etc.) are **standalone**: only stdlib + `pyyaml`.
+- `check_all` orchestrates all tools and depends on ruff, mypy, bandit, vulture, pylint, shellcheck-py.
 
 ---
 
@@ -113,12 +114,12 @@ Always push the tag immediately after the commit. Never batch multiple features 
 
 ---
 
-## Current status (2026-04-30)
+## Current status (2026-05-01)
 
-- [ ] Python stack checkers migrated from `.brain`
-- [ ] `shared/abbrev-rules.yaml` populated
-- [ ] `.pre-commit-hooks.yaml` defined
+- [x] Python stack checkers migrated from `.brain`
+- [x] `shared/abbrev-rules.yaml` populated
+- [x] `.pre-commit-hooks.yaml` defined
+- [x] `pyproject.toml` configured
+- [x] First release tagged (`v0.1.1`)
 - [ ] `bootstrap.py` implemented
-- [ ] `pyproject.toml` configured
-- [ ] First release tagged (`v0.1.0`)
-- [ ] `netbeans-setup` consuming this repo
+- [ ] `netbeans-setup` consuming this repo via pre-commit
