@@ -52,8 +52,7 @@ Accept a project root. Run automatically by `check-all`.
 
 | Invocation | What it does |
 |---|---|
-| `install-skill` | Copy `SKILL.md` to `~/.claude/skills/dev-quality/` |
-| `install-skill --target <dir>` | Copy to a custom skills directory |
+| `install-skill --target <dir>` | Copy `SKILL.md` to `<dir>/dev-quality/SKILL.md` |
 
 ---
 

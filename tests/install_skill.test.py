@@ -12,16 +12,30 @@ def test_parse_target_returns_explicit_path(monkeypatch: pytest.MonkeyPatch) -> 
     assert _parse_target() == "/my/skills"
 
 
-def test_parse_target_defaults_to_claude_skills(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_parse_target_exits_when_target_missing(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sys, "argv", ["install-skill"])
-    assert ".claude/skills" in _parse_target()
+    with pytest.raises(SystemExit) as raised:
+        _parse_target()
+    assert raised.value.code == 1
 
 
-def test_parse_target_defaults_when_target_flag_has_no_value(
+def test_parse_target_exits_when_target_flag_has_no_value(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(sys, "argv", ["install-skill", "--target"])
-    assert ".claude/skills" in _parse_target()
+    with pytest.raises(SystemExit) as raised:
+        _parse_target()
+    assert raised.value.code == 1
+
+
+def test_parse_target_prints_usage_when_target_missing(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["install-skill"])
+    with pytest.raises(SystemExit):
+        _parse_target()
+    assert "--target" in capsys.readouterr().out
 
 
 def test_install_creates_skill_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

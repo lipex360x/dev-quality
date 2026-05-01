@@ -11,7 +11,9 @@ def _parse_target() -> str:
         position = argv.index("--target")
         if position + 1 < len(argv):
             return argv[position + 1]
-    return str(Path.home() / ".claude" / "skills")
+    print("Usage: install-skill --target <skills-directory>")
+    print("Example: install-skill --target ~/.claude/skills")
+    sys.exit(1)
 
 
 def main() -> None:
