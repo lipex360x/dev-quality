@@ -128,7 +128,9 @@ Never use manual `git tag` / `git push` / `gh release create` — always use the
 3. Commit
 4. `uv run release.py --release` → reads version from CHANGELOG, updates `pyproject.toml` + README badge, commits those, creates tag, pushes, creates GitHub Release
 
-**For documentation-only commits** (README prose, CLAUDE.md, guides): commit normally, do **not** run `release.py`.
+**For documentation-only commits** (README prose, CLAUDE.md, guides): commit + `git push`, do **not** run `release.py`.
+
+Always push after every commit — behavior-changing or docs-only.
 
 **Two modes:**
 - `uv run release.py` — updates `pyproject.toml` + README badge + commits, no tag/release
