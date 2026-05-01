@@ -258,37 +258,28 @@ After installation, invoke `/dev-quality` in any session to load the rules.
 
 ## Local configuration — `.dev-quality.yaml`
 
-Create a `.dev-quality.yaml` at the project root to customize `check-all` behavior:
+Create a `.dev-quality.yaml` at the project root to customize `check-all` behavior. The file is optional — all defaults apply when it is absent.
+
+| Key | Default | Description |
+|---|---|---|
+| `skip` | `[]` | Checkers to disable. Valid values: `check-abbrev`, `check-comments`, `check-size`, `check-complexity`, `check-bash-tests`, `check-bash-logs`, `ruff`, `mypy`, `vulture`, `bandit`, `pylint`, `shellcheck`, `semgrep` |
+| `line_length` | `100` | Maximum line length passed to ruff |
+| `max_complexity` | `6` | Maximum cyclomatic complexity for Bash functions |
+| `max_file_lines` | `800` | Maximum number of lines per file |
+| `max_func_lines` | `100` | Maximum number of lines per function |
+| `python_version` | `"3.11"` | Python version passed to mypy |
 
 ```yaml
-# Checkers to skip (any combination of the names below)
-# check-abbrev, check-comments, check-size, check-complexity,
-# check-bash-tests, check-bash-logs,
-# ruff, mypy, vulture, bandit, pylint, shellcheck, semgrep
 skip:
   - check-bash-logs
   - check-bash-tests
 
-# Maximum line length (default: 100)
-line_length: 120
-
-# Maximum cyclomatic complexity for Bash and Python functions (default: 6)
-max_complexity: 8
-
-# Maximum number of lines per file (default: 800)
-max_file_lines: 1000
-
-# Maximum number of lines per function (default: 100)
+line_length: 100
+max_complexity: 6
+max_file_lines: 800
 max_func_lines: 100
-
-# Python version for mypy (default: "3.11")
-python_version: "3.12"
+python_version: "3.11"
 ```
-
-The file is optional — defaults above apply when it is absent.
-
-> [!TIP]
-> The [`.dev-quality.yaml`](.dev-quality.yaml) at the root of this repo is a working example with all available keys.
 
 <div align="right"><a href="#dev-quality">↑ Back to top</a></div>
 
