@@ -15,6 +15,7 @@ from check_all import (
     _run,
     _run_on_dir,
     _run_on_files,
+    _user_cache_dir,
     main,
 )
 
@@ -31,6 +32,11 @@ def _make_files(tmp_path: Path, names: list[str]) -> list[Path]:
 
 def _write_config(tmp_path: Path, data: dict[str, object]) -> None:
     (tmp_path / ".dev-quality.yaml").write_text(yaml.dump(data), encoding="utf-8")
+
+
+@pytest.fixture(autouse=True)
+def _patch_user_cache_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("check_all._user_cache_dir", lambda: tmp_path / "cache")
 
 
 def _stub_collect(tmp_path: Path, py: list[str] = (), sh: list[str] = ()):
@@ -522,7 +528,7 @@ def test_main_python_version_passed_to_mypy(
     assert "3.12" in all_args
 
 
-def test_main_ruff_passes_no_cache(
+def test_main_ruff_default_uses_cache_dir(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -534,10 +540,11 @@ def test_main_ruff_passes_no_cache(
                 main()
     ruff_calls = [call[0][0] for call in mock_run.call_args_list if call[0][0][0] == "ruff"]
     assert ruff_calls
-    assert all("--no-cache" in args for args in ruff_calls)
+    assert all("--cache-dir" in args for args in ruff_calls)
+    assert not any("--no-cache" in args for args in ruff_calls)
 
 
-def test_main_mypy_passes_no_incremental(
+def test_main_mypy_default_uses_cache_dir(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -549,7 +556,59 @@ def test_main_mypy_passes_no_incremental(
                 main()
     mypy_calls = [call[0][0] for call in mock_run.call_args_list if call[0][0][0] == "mypy"]
     assert mypy_calls
+    assert "--cache-dir" in mypy_calls[0]
+    assert "--no-incremental" not in mypy_calls[0]
+
+
+def test_main_no_cache_flag_disables_ruff_cache(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", "--no-cache", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])):
+        with patch("subprocess.run", return_value=ok) as mock_run:
+            with pytest.raises(SystemExit):
+                main()
+    ruff_calls = [call[0][0] for call in mock_run.call_args_list if call[0][0][0] == "ruff"]
+    assert ruff_calls
+    assert all("--no-cache" in args for args in ruff_calls)
+    assert not any("--cache-dir" in args for args in ruff_calls)
+
+
+def test_main_no_cache_flag_disables_mypy_incremental(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", "--no-cache", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])):
+        with patch("subprocess.run", return_value=ok) as mock_run:
+            with pytest.raises(SystemExit):
+                main()
+    mypy_calls = [call[0][0] for call in mock_run.call_args_list if call[0][0][0] == "mypy"]
+    assert mypy_calls
     assert "--no-incremental" in mypy_calls[0]
+    assert "--cache-dir" not in mypy_calls[0]
+
+
+def test_main_no_cache_flag_resolves_path_correctly(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", "--no-cache", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("check_all._collect", return_value=[]) as mock_collect:
+        with patch("subprocess.run", return_value=ok):
+            with pytest.raises(SystemExit):
+                main()
+    assert mock_collect.call_args[0][0] == tmp_path.resolve()
+
+
+def test_user_cache_dir_returns_path_under_tmp() -> None:
+    import tempfile
+    result = _user_cache_dir()
+    assert result == Path(tempfile.gettempdir()) / "dev-quality"
 
 
 def test_main_ruff_check_ignores_s101(

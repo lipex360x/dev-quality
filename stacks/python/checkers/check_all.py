@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import yaml
@@ -40,6 +41,10 @@ def _collect(root: Path, suffixes: frozenset[str]) -> list[Path]:
             and path.suffix in suffixes
             and path.is_file()
         )
+
+
+def _user_cache_dir() -> Path:
+    return Path(tempfile.gettempdir()) / "dev-quality"
 
 
 def _load_config(root: Path) -> dict[str, object]:
@@ -111,7 +116,9 @@ def _print_summary(results: dict[str, tuple[bool, int]]) -> None:
 
 
 def main() -> None:
-    root = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path.cwd()
+    no_cache = "--no-cache" in sys.argv
+    args = [arg for arg in sys.argv[1:] if arg != "--no-cache"]
+    root = Path(args[0]).resolve() if args else Path.cwd()
     config = _load_config(root)
 
     skip = set(config.get("skip", []))  # type: ignore[arg-type]
@@ -120,6 +127,14 @@ def main() -> None:
     max_file_lines = str(config.get("max_file_lines", 800))
     max_func_lines = str(config.get("max_func_lines", 80))
     python_version = str(config.get("python_version", "3.11"))
+
+    if no_cache:
+        ruff_cache: list[str] = ["--no-cache"]
+        mypy_cache: list[str] = ["--no-incremental"]
+    else:
+        cache_dir = _user_cache_dir()
+        ruff_cache = ["--cache-dir", str(cache_dir / "ruff")]
+        mypy_cache = ["--cache-dir", str(cache_dir / "mypy")]
 
     py_files = _collect(root, frozenset([".py"]))
     sh_files = _collect(root, frozenset([".sh"]))
@@ -159,7 +174,7 @@ def main() -> None:
             ok = _run_on_files(
                 [
                     "ruff", "check",
-                    "--no-cache",
+                    *ruff_cache,
                     "--line-length", line_length,
                     "--select", "E,F,I,UP,B,SIM,RET,C,S,N,PLR2004",
                     "--extend-ignore", "S101",
@@ -171,7 +186,7 @@ def main() -> None:
 
             start = len(findings)
             ok = _run_on_files(
-                ["ruff", "format", "--check", "--no-cache", "--line-length", line_length],
+                ["ruff", "format", "--check", *ruff_cache, "--line-length", line_length],
                 py_files, findings,
             )
             results["ruff format"] = (ok, len(findings) - start)
@@ -180,7 +195,7 @@ def main() -> None:
         if "mypy" not in skip:
             start = len(findings)
             ok = _run_on_files(
-                ["mypy", "--strict", "--no-incremental",
+                ["mypy", "--strict", *mypy_cache,
                  "--python-version", python_version, "--ignore-missing-imports"],
                 py_files, findings,
             )
