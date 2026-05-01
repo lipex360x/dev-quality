@@ -132,9 +132,8 @@ def test_main_exits_0_when_all_pass(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with patch("subprocess.run", return_value=ok):
-        with patch("shutil.which", return_value="/usr/bin/shellcheck"):
-            with pytest.raises(SystemExit) as raised:
-                main()
+        with pytest.raises(SystemExit) as raised:
+            main()
     assert raised.value.code == 0
 
 
@@ -147,9 +146,8 @@ def test_main_exits_1_when_any_fails(
     fail = MagicMock(returncode=1, stdout="ABBREV:bad.py:1:ext", stderr="")
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with patch("subprocess.run", side_effect=[fail] + [ok] * 20):
-        with patch("shutil.which", return_value=None):
-            with pytest.raises(SystemExit) as raised:
-                main()
+        with pytest.raises(SystemExit) as raised:
+            main()
     assert raised.value.code == 1
 
 
@@ -157,13 +155,12 @@ def test_main_uses_cwd_when_no_arg(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sys, "argv", ["check-all"])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with patch("subprocess.run", return_value=ok):
-        with patch("shutil.which", return_value=None):
-            with pytest.raises(SystemExit) as raised:
-                main()
+        with pytest.raises(SystemExit) as raised:
+            main()
     assert raised.value.code in (0, 1)
 
 
-def test_main_skips_shellcheck_when_not_found(
+def test_main_always_runs_shellcheck(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -171,24 +168,8 @@ def test_main_skips_shellcheck_when_not_found(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with patch("subprocess.run", return_value=ok) as mock_run:
-        with patch("shutil.which", return_value=None):
-            with pytest.raises(SystemExit):
-                main()
-    called_commands = [call[0][0] for call in mock_run.call_args_list]
-    assert not any("shellcheck" in cmd for cmd in called_commands)
-
-
-def test_main_runs_shellcheck_when_found(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    (tmp_path / "script.sh").touch()
-    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
-    ok = MagicMock(returncode=0, stdout="", stderr="")
-    with patch("subprocess.run", return_value=ok) as mock_run:
-        with patch("shutil.which", return_value="/usr/bin/shellcheck"):
-            with pytest.raises(SystemExit):
-                main()
+        with pytest.raises(SystemExit):
+            main()
     called_commands = [call[0][0] for call in mock_run.call_args_list]
     assert any("shellcheck" in cmd for cmd in called_commands)
 
@@ -201,9 +182,8 @@ def test_main_skips_py_tools_when_no_py_files(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with patch("subprocess.run", return_value=ok) as mock_run:
-        with patch("shutil.which", return_value=None):
-            with pytest.raises(SystemExit):
-                main()
+        with pytest.raises(SystemExit):
+            main()
     called_commands = [call[0][0] for call in mock_run.call_args_list]
     assert not any("ruff" in cmd for cmd in called_commands)
     assert not any("mypy" in cmd for cmd in called_commands)

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -94,7 +93,7 @@ def main() -> None:
             py_files, findings,
         )
 
-    if sh_files and shutil.which("shellcheck"):
+    if sh_files:
         passed &= _run_on_files(["shellcheck"], sh_files, findings)
 
     for finding in findings:
