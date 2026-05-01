@@ -1,163 +1,185 @@
 ---
 name: dev-quality
 description: >-
-  Guide for working inside the dev-quality repo. Use this skill when the user
-  wants to add a new checker, fix a violation, understand a checker's output,
-  run the suite locally, or release a new version.
+  Rules enforced by dev-quality checkers. Use this skill in any project that
+  runs dev-quality so Claude produces code that passes all checks on the first
+  commit — no post-write refactor needed.
 user-invocable: true
 allowed-tools:
-  - Bash
   - Read
-  - Edit
-  - Write
+  - Bash
 ---
 
-# dev-quality — contributor guide
+# dev-quality — coding rules
 
-Central repo for code quality tooling. Houses custom checker scripts, pre-commit hook definitions, and bootstrap scripts for all stacks.
+This project runs dev-quality on every commit. The rules below are what the
+checkers enforce. Follow them while writing — not after.
 
 ## Pre-flight
 
-<pre_flight>
-
-1. Confirm CWD is the dev-quality repo root — `ls pyproject.toml stacks/ tests/` must succeed.
-2. Confirm the venv is ready — `uv run pytest --collect-only -q 2>&1 | tail -1` should list collected tests.
-3. Confirm pre-commit hook is local — `grep "repo: local" .pre-commit-config.yaml` must match.
-
-</pre_flight>
-
-## Architecture
-
-```
-stacks/
-  python/
-    checkers/       ← standalone checker scripts (stdlib + pyyaml only)
-  bash/
-  typescript/       ← planned
-shared/
-  abbrev-rules.yaml ← banned abbreviations (cross-stack)
-tests/              ← one test file per checker
-skills/
-  dev-quality/      ← this skill
-.pre-commit-hooks.yaml
-pyproject.toml
-release.py
-```
-
-## Checkers
-
-| Checker | Entry point | Scope |
-|---------|-------------|-------|
-| `check-abbrev` | `stacks/python/checkers/check_abbrev.py` | `.py` + `.sh` |
-| `check-comments` | `stacks/python/checkers/check_comments.py` | `.py` + `.sh` |
-| `check-size` | `stacks/python/checkers/check_size.py` | `.py` + `.sh` |
-| `check-complexity` | `stacks/python/checkers/check_complexity.py` | `.sh` |
-| `check-bash-tests` | `stacks/python/checkers/check_bash_tests.py` | dir |
-| `check-bash-logs` | `stacks/python/checkers/check_bash_logs.py` | dir |
-| `check-all` | `stacks/python/checkers/check_all.py` | orchestrator |
-
-## Running checks
+Read `.dev-quality.yaml` if it exists at the project root — it overrides the
+defaults listed here. Any limit shown as "(default)" may be higher or lower in
+this project.
 
 ```bash
-uv run check-all .           # full suite against this repo
-uv run check-abbrev <file>   # individual checker
-uv run pytest                # test suite (238 tests, 100% coverage required)
-uv run pytest tests/check_size.test.py  # single file
+cat .dev-quality.yaml 2>/dev/null || echo "(no local overrides — defaults apply)"
 ```
 
-## Configuration — `.dev-quality.yaml`
+## Banned abbreviations
+
+Never use these as identifiers (variable names, function names, parameters,
+local variables) in `.py` or `.sh` files:
+
+| Abbreviation | Use instead |
+|---|---|
+| `attr` | `attribute` |
+| `buf` | `buffer` |
+| `cfg` | `config` or `configuration` |
+| `cmd` | `command` |
+| `col` | `column` or `color` |
+| `ctx` | `context` |
+| `db` | `database` |
+| `dest` | `destination` |
+| `doc` | `document` |
+| `dst` | `destination` |
+| `elem` | `element` |
+| `env` | `environment` |
+| `err` | `error` |
+| `exc` | `exception` |
+| `ext` | `extension` |
+| `fmt` | `format` |
+| `fn` | `function` |
+| `func` | `function` |
+| `idx` | `index` |
+| `img` | `image` |
+| `mod` | `module` |
+| `msg` | `message` |
+| `num` | `number` |
+| `obj` | `object` |
+| `opts` | `options` |
+| `pkg` | `package` |
+| `ref` | `reference` |
+| `req` | `request` |
+| `res` | `response` or `result` |
+| `sep` | `separator` |
+| `src` | `source` |
+| `tmp` | `temporary` |
+| `usr` | `user` |
+| `val` | `value` |
+| `var` | `variable` |
+
+**Always allowed:** `self`, `cls`, `args`, `kwargs`, `i`, `j`, `k`, `_`, `id`, `ok`, `io`.
+
+In Bash only, `dest` is also allowed (counterpart to `src` in file-operation functions).
+
+## Comments
+
+No comments in `.py` or `.sh` files. The only exceptions:
+
+| Allowed | Example |
+|---------|---------|
+| Shebang | `#!/usr/bin/env bash` |
+| Shellcheck directives | `# shellcheck source=/dev/null` |
+| Ruff suppressions | `# noqa: S603` |
+| Mypy suppressions | `# type: ignore[attr-defined]` |
+| Coverage exclusions | `# pragma: no cover` |
+| PEP 723 script blocks | `# /// script` … `# ///` |
+
+If you feel like writing a comment, rename the variable or extract a function instead.
+
+## Size limits
+
+| Limit | Default | Config key |
+|-------|---------|------------|
+| Lines per file | 800 | `max_file_lines` |
+| Lines per function | 100 | `max_func_lines` |
+
+Applies to both `.py` and `.sh`. Empty lines count toward the total.
+
+If a function is approaching the limit, split it before finishing — extracting
+a helper after the fact is more disruptive than designing for it upfront.
+
+## Python — ruff rules active
+
+| Set | What it checks |
+|-----|----------------|
+| `E`, `F` | PEP 8 style and undefined names |
+| `I` | Import sorting |
+| `UP` | Modernise syntax (f-strings, union types, etc.) |
+| `B` | Bugbear — likely bugs and bad practices |
+| `SIM` | Simplifiable code |
+| `RET` | Return statement cleanup |
+| `C` | McCabe complexity |
+| `S` | Security — S101/S603/S607 suppressed in test files |
+| `N` | Naming conventions |
+| `PLR2004` | Magic number comparisons — suppressed in test files |
+
+**Patterns that trigger violations while writing:**
+
+- Nested `with` statements → combine: `with A(), B():` not `with A():\n    with B():`
+- f-strings without placeholders → `"text"` not `f"text"`
+- Unsorted imports → stdlib first, then third-party, then local; alphabetical within each group
+- Mutable defaults → `def f(items: list[str] | None = None)` not `def f(items: list[str] = [])`
+
+## Python — mypy strict
+
+Every function needs complete type annotations:
+
+```python
+def process(items: list[str], limit: int = 10) -> list[str]:
+```
+
+No `Any` unless unavoidable. Prefer `object` for genuinely unknown types.
+
+## Python — naming (pylint C0103)
+
+- Variables and arguments: `snake_case`, minimum 3 characters
+- Always allowed short names: `i`, `j`, `k`, `_`, `id`, `ok`
+- Functions: `snake_case`, minimum 3 characters
+- Classes: `PascalCase`, minimum 3 characters
+
+## Bash — complexity
+
+Maximum cyclomatic complexity per function: **6** (default, see `max_complexity`).
+
+Reduce complexity by extracting nested conditions into named helpers, replacing
+`if/elif` chains with `case` statements, and keeping each function to one
+decision path.
+
+## Bash — test pairing
+
+Every `.sh` outside `hooks/` and `tests/` must have a paired test file.
+Create `tests/deploy.test.sh` when you create `scripts/deploy.sh`.
+
+## Bash — log initialisation
+
+Every `.sh` outside `hooks/`, `tests/`, and `lib/` must call `log::init_script`
+near the top of the file.
+
+## Local configuration
+
+Always check `.dev-quality.yaml` first — it sets the real active limits:
 
 ```yaml
-# size
-max_file_lines: 800   # default
-max_func_lines: 100   # default (this repo uses 120)
-
-# complexity
-max_complexity: 6     # default
-
-# style
-line_length: 100      # default
-python_version: "3.11"
-
-# skip checkers
+max_file_lines: 1000
+max_func_lines: 120
+max_complexity: 8
+line_length: 120
+python_version: "3.12"
 skip:
   - check-bash-logs
 ```
 
-## Absolute rules
+## Self-audit before finishing
 
-- **TDD** — test file first, implementation second. No exceptions.
-- **No comments** — `.py` and `.sh` files allow only shebangs, `# noqa`, `# type: ignore`, `# pragma: no cover`.
-- **No abbreviations** — reads `shared/abbrev-rules.yaml`.
-- **Coverage: 100%** — checkers are small enough to cover fully.
-- **Standalone checkers** — `check_abbrev`, `check_comments`, `check_size`, `check_complexity`, `check_bash_tests`, `check_bash_logs` use only stdlib + pyyaml.
+Before reporting a task as done:
 
-## Adding a new checker
-
-1. Write `tests/check_<name>.test.py` — run `uv run pytest tests/check_<name>.test.py` — must fail (red).
-2. Write `stacks/python/checkers/check_<name>.py`.
-3. Run tests until green.
-4. Register in `.pre-commit-hooks.yaml` and in `_CUSTOM_FILE_CHECKERS` or `_CUSTOM_DIR_CHECKERS` in `check_all.py`.
-5. Add the new checker entry point to `pyproject.toml` under `[project.scripts]`.
-6. Document in `README.md`.
-
-## Fixing common violations
-
-| Code | Meaning | Fix |
-|------|---------|-----|
-| `FILE_TOO_LONG` | File exceeds `max_file_lines` | Split the file or raise limit in `.dev-quality.yaml` |
-| `FUNC_TOO_LONG` | Function exceeds `max_func_lines` | Extract helpers or raise limit in `.dev-quality.yaml` |
-| `ABBREV:<word>` | Banned abbreviation found | Expand: `cfg→config`, `buf→buffer`, `tmp→temporary`, etc. |
-| `INLINE_COMMENT` | Inline comment found | Remove the comment — name the variable better instead |
-| `BLOCK_COMMENT` | Block comment found | Remove; move intent to commit message or PR description |
-| `COMPLEXITY:<n>` | Bash function too complex | Decompose into smaller functions |
-| `MISSING_TEST` | `.sh` has no paired test | Create `tests/<name>.test.sh` |
-| `MISSING_LOG_INIT` | `.sh` never calls `log::init_script` | Add the call at the top |
-
-## Releasing
-
-```bash
-uv run release.py --dry-run   # preview tag + changelog
-uv run release.py             # tag, push, create GitHub Release
-```
-
-**When to release** — only on behavior-changing commits (new checker, bug fix that affects output, new config param, new command). Never for docs, CLAUDE.md, or test-only commits.
-
-**Version bump before release:**
-1. `pyproject.toml` → `[project] version`
-2. `CHANGELOG.md` → add entry
-3. `README.md` → version badge
-
-**Semver:**
-
-| Change | Bump |
-|--------|------|
-| Bug fix | patch |
-| New checker / config param / command | minor |
-| Breaking: hook renamed, output format changed | major |
-
-## Installing this skill
-
-From the dev-quality repo root:
-
-```bash
-ln -sf "$(pwd)/skills/dev-quality" ~/.claude/skills/dev-quality
-```
-
-To uninstall:
-
-```bash
-rm ~/.claude/skills/dev-quality
-```
-
-## Self-audit
-
-<self_audit>
-
-1. **Pre-flight passed?** — repo root confirmed, venv ready, pre-commit is local
-2. **TDD followed?** — test written before implementation for any new code
-3. **Coverage at 100%?** — `uv run pytest --cov` shows no missed lines
-4. **Pre-commit passes?** — `git commit` triggered hooks and all passed
-5. **Release done?** — if behavior changed, version bumped and `release.py` run
-
-</self_audit>
+1. No banned abbreviations used as identifiers
+2. No comments written (except the allowed exceptions)
+3. No function exceeds `max_func_lines` lines (check `.dev-quality.yaml`)
+4. No file exceeds `max_file_lines` lines (check `.dev-quality.yaml`)
+5. All nested `with` statements are combined
+6. All imports are sorted and grouped correctly
+7. All functions have complete type annotations (Python)
+8. No f-strings without placeholders
+9. Every new Bash script has a paired test and calls `log::init_script`
