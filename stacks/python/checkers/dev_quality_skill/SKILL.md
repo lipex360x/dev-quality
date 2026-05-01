@@ -52,7 +52,7 @@ Accept a project root. Run automatically by `check-all`.
 
 | Invocation | What it does |
 |---|---|
-| `install-skill --target <dir>` | Copy `SKILL.md` to `<dir>/dev-quality/SKILL.md` |
+| `check-all install-skill --target <dir>` | Copy `SKILL.md` to `<dir>/dev-quality/SKILL.md` |
 
 ---
 

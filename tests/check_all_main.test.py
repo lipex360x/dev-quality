@@ -696,3 +696,46 @@ def test_main_ruff_check_has_per_file_ignores_for_plr2004(
     per_file_positions = [index for index, arg in enumerate(args) if arg == "--per-file-ignores"]
     per_file_values = [args[index + 1] for index in per_file_positions]
     assert any("PLR2004" in value for value in per_file_values)
+
+
+def test_install_skill_subcommand_calls_install(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", "install-skill", "--target", str(tmp_path)])
+    with (
+        patch("check_all._do_install_skill") as mock_install,
+        pytest.raises(SystemExit) as raised,
+    ):
+        main()
+    mock_install.assert_called_once_with(str(tmp_path))
+    assert raised.value.code == 0
+
+
+def test_install_skill_subcommand_exits_1_when_target_missing(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", "install-skill"])
+    with pytest.raises(SystemExit) as raised:
+        main()
+    assert raised.value.code == 1
+    assert "--target" in capsys.readouterr().out
+
+
+def test_install_skill_subcommand_exits_1_when_target_flag_has_no_value(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", "install-skill", "--target"])
+    with pytest.raises(SystemExit) as raised:
+        main()
+    assert raised.value.code == 1
+    assert "--target" in capsys.readouterr().out
+
+
+def test_do_install_skill_writes_skill_md(tmp_path: Path) -> None:
+    from check_all import _do_install_skill
+
+    _do_install_skill(str(tmp_path))
+    assert (tmp_path / "dev-quality" / "SKILL.md").exists()

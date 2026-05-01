@@ -43,7 +43,6 @@ check-bash-tests = "check_bash_tests:main"
 check-comments = "check_comments:main"
 check-complexity = "check_complexity:main"
 check-size = "check_size:main"
-install-skill = "install_skill:main"
 
 [dependency-groups]
 dev = [

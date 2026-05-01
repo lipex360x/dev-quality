@@ -20,6 +20,7 @@ Central repository for code quality tooling across stacks. Houses custom checker
   - [Automated on every commit — pre-commit](#automated-on-every-commit--pre-commit)
 - [Running specific checkers](#running-specific-checkers)
 - [check-all behavior](#check-all-behavior)
+- [AI assistant skill](#ai-assistant-skill)
 - [Local configuration](#local-configuration----dev-qualityyaml)
 - [Individual hooks](#individual-hooks)
 - [Local development](#local-development)
@@ -218,6 +219,24 @@ check-all --clear-cache
 # run without using or writing cache
 check-all --no-cache .
 ```
+
+<div align="right"><a href="#dev-quality">↑ Back to top</a></div>
+
+---
+
+## AI assistant skill
+
+Install the bundled skill file so your AI assistant can apply dev-quality rules while writing code — preventing violations before the commit runs:
+
+```bash
+# Claude Code
+check-all install-skill --target ~/.claude/skills
+
+# Any other tool — point to its skills directory
+check-all install-skill --target <your-tool-skills-dir>
+```
+
+After installation, invoke `/dev-quality` in any session to load the rules.
 
 <div align="right"><a href="#dev-quality">↑ Back to top</a></div>
 

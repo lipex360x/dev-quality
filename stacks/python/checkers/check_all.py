@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 
 import yaml
+from install_skill import main as _install_skill_main
 
 _SKIP_DIRS = frozenset(["__pycache__", ".venv", ".git", "node_modules"])
 
@@ -46,6 +47,23 @@ def _collect(root: Path, suffixes: frozenset[str]) -> list[Path]:
 
 def _user_cache_dir() -> Path:
     return Path(tempfile.gettempdir()) / "dev-quality"
+
+
+def _do_install_skill(target: str) -> None:
+    sys.argv = ["install-skill", "--target", target]
+    _install_skill_main()
+
+
+def _handle_install_skill(args: list[str]) -> None:
+    remaining = args[1:]
+    if "--target" in remaining:
+        position = remaining.index("--target")
+        if position + 1 < len(remaining):
+            _do_install_skill(remaining[position + 1])
+            sys.exit(0)
+    print("Usage: check-all install-skill --target <skills-directory>")
+    print("Example: check-all install-skill --target ~/.claude/skills")
+    sys.exit(1)
 
 
 def _do_clear_cache() -> None:
@@ -313,6 +331,9 @@ def main() -> None:
     if clear_cache:
         _do_clear_cache()
         sys.exit(0)
+
+    if args and args[0] == "install-skill":
+        _handle_install_skill(args)
 
     root = Path(args[0]).resolve() if args else Path.cwd()
     print(f"Scanning {root} ...", flush=True)
