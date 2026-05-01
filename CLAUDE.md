@@ -111,18 +111,21 @@ After every commit to this repo, bump the version and tag the release.
 
 **Where to update:** `pyproject.toml` → `[project] version`
 
-**Then tag and push:**
+**Then release using the script:**
 ```bash
-git tag v<new-version>
-git push origin v<new-version>
+uv run release.py --dry-run  # preview first
+uv run release.py            # creates tag, pushes, creates GitHub Release
 ```
 
-**On every behavior-changing commit, update before tagging:**
+The script reads the version from `pyproject.toml`, extracts the matching CHANGELOG
+section automatically, and runs `git tag` + `git push origin <tag>` + `gh release create`
+in sequence. Never use manual `git tag` / `git push` / `gh release create` — always use
+the script.
+
+**On every behavior-changing commit, update before running release.py:**
 1. `pyproject.toml` → `[project] version`
 2. `CHANGELOG.md` → add entry under the new version
 3. `README.md` → version badge + any new behavior documented
-4. **GitHub Release** → create or update release on GitHub matching the new tag (title = `vX.Y.Z`, body = CHANGELOG entry for that version)
-5. Tag and push
 
 **Only tag when the package behavior changes** — new checker, bug fix that affects output, new config param, new command, new hook. Do NOT tag for docs, CLAUDE.md updates, status changes, or test-only commits.
 
