@@ -209,6 +209,40 @@ skip:
 
 If the file does not exist — including when running via `uvx` — the defaults apply as-is.
 
+## TDD — non-negotiable
+
+**Red → Green → Refactor. No exceptions.**
+
+Never write implementation before a failing test exists. This is not a
+preference — it is the only permitted workflow in this project.
+
+### The rule
+
+1. Write the test first
+2. Run it — it **must fail** (red). If it passes without implementation, the test is wrong or the feature already exists
+3. Write the minimum implementation to make it pass (green)
+4. Refactor if needed, keeping tests green
+
+If you skip step 2 and go straight to green, you have no evidence the test
+actually validates the behaviour. That test is worthless.
+
+### What counts as a test
+
+Every `.py` file under `scripts/python/` needs a corresponding test file in
+`tests/`. The test file must exist **before** the implementation file.
+Coverage must reach 100% — checkers are small enough to cover fully.
+
+### When you are tempted to skip TDD
+
+You will be tempted when:
+- The change feels "too small" to test first → it is not
+- You already know what the implementation looks like → write the test first anyway
+- You are fixing a bug → write a failing test that reproduces the bug before touching any implementation
+
+**Every bug fix starts with a failing test that demonstrates the bug.**
+
+---
+
 ## Self-audit before finishing
 
 Before reporting a task as done:
