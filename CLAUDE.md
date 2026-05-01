@@ -79,6 +79,21 @@ programmatically.
 
 ---
 
+## Testing as a user
+
+When asked to test or validate behavior as a user would, always use `uvx` fetching
+from the published GitHub tag — never `uv run`:
+
+```bash
+cd /path/to/target-project
+uvx --from git+https://github.com/lipex360x/dev-quality check-all .
+```
+
+`uv run` uses the local source and bypasses the published package. `uvx` is what
+real users run.
+
+---
+
 ## Key rules in this repo
 
 - **TDD**: test file first, implementation second. No exceptions.
