@@ -1,9 +1,26 @@
 # dev-quality
 
-Central repository for code quality tooling across stacks.
+> Quality tooling for Python and Bash — enforced via pre-commit or on-demand via uvx.
 
-Houses custom checker scripts, pre-commit hook definitions, and bootstrap scripts.
-Single source of truth — no more copying tools across projects.
+Central repository for code quality tooling across stacks. Houses custom checker scripts, pre-commit hook definitions, and bootstrap scripts. Single source of truth — no more copying tools across projects.
+
+[![Version](https://img.shields.io/badge/version-v0.1.1-blue)](https://github.com/lipex360x/dev-quality/releases)
+
+---
+
+## Contents
+
+- [Checkers](#checkers)
+- [Prerequisites](#prerequisites)
+- [How to use](#how-to-use)
+  - [One-off analysis — uvx](#one-off-analysis--uvx-no-install-required)
+  - [Permanent install — uv](#permanent-install--uv)
+  - [Automated on every commit — pre-commit](#automated-on-every-commit--pre-commit)
+- [Running specific checkers](#running-specific-checkers)
+- [Local configuration](#local-configuration----dev-qualityyaml)
+- [Individual hooks](#individual-hooks)
+- [Local development](#local-development)
+- [Stacks](#stacks)
 
 ---
 
@@ -27,21 +44,47 @@ Single source of truth — no more copying tools across projects.
 
 ---
 
+## Prerequisites
+
+- **Python 3.11+**
+- **[uv](https://docs.astral.sh/uv/getting-started/installation/)** — used to run checkers without a manual install
+- **Git** — required for the `git+https://` install form
+
+> [!NOTE]
+> No system install of shellcheck is needed — `shellcheck-py` bundles the binary and is installed automatically.
+
+---
+
 ## How to use
 
 ### One-off analysis — `uvx` (no install required)
 
-Run all checkers against any project without installing anything:
+Run all checkers against any project without installing anything permanently:
 
 ```bash
 uvx --from git+https://github.com/lipex360x/dev-quality check-all /path/to/project
 ```
 
-Useful for auditing a project before setting up pre-commit, or in CI without prior setup.
+`uvx` fetches the package into a temporary environment, runs the command, and discards it. Useful for auditing a project before setting up pre-commit, or in CI without prior setup.
+
+### Permanent install — `uv`
+
+Install once and run the commands directly from any terminal session:
+
+```bash
+uv tool install git+https://github.com/lipex360x/dev-quality
+```
+
+Then use any checker without the `uvx --from ...` prefix:
+
+```bash
+check-all /path/to/project
+check-abbrev src/main.py
+```
 
 ### Automated on every commit — pre-commit
 
-Add to the target project's `.pre-commit-config.yaml` to run automatically:
+Add to the target project's `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
@@ -57,6 +100,40 @@ Then install the hooks:
 pre-commit install
 ```
 
+[↑ Back to top](#dev-quality)
+
+---
+
+## Running specific checkers
+
+File-based checkers accept one or more file paths:
+
+```bash
+# Check for banned abbreviations
+uvx --from git+https://github.com/lipex360x/dev-quality check-abbrev src/main.py scripts/deploy.sh
+
+# Check for disallowed comments
+uvx --from git+https://github.com/lipex360x/dev-quality check-comments src/main.py
+
+# Check file and function size
+uvx --from git+https://github.com/lipex360x/dev-quality check-size src/main.py scripts/deploy.sh
+
+# Check Bash function complexity
+uvx --from git+https://github.com/lipex360x/dev-quality check-complexity scripts/deploy.sh
+```
+
+Directory-based checkers accept a project root (defaults to `git rev-parse --show-toplevel`):
+
+```bash
+# Check every Bash script has a paired test
+uvx --from git+https://github.com/lipex360x/dev-quality check-bash-tests /path/to/project
+
+# Check every Bash script calls log::init_script
+uvx --from git+https://github.com/lipex360x/dev-quality check-bash-logs /path/to/project
+```
+
+[↑ Back to top](#dev-quality)
+
 ---
 
 ## Local configuration — `.dev-quality.yaml`
@@ -64,8 +141,6 @@ pre-commit install
 Create a `.dev-quality.yaml` at the project root to customize `check-all` behavior:
 
 ```yaml
-# .dev-quality.yaml
-
 # Checkers to skip (any combination of the names below)
 # check-abbrev, check-comments, check-size, check-complexity,
 # check-bash-tests, check-bash-logs,
@@ -92,6 +167,8 @@ python_version: "3.12"
 
 The file is optional — defaults above apply when it is absent.
 
+[↑ Back to top](#dev-quality)
+
 ---
 
 ## Individual hooks
@@ -111,8 +188,29 @@ repos:
       - id: check-bash-logs
 ```
 
+> [!IMPORTANT]
 > Individual hooks do not include ruff, mypy, vulture, bandit, pylint, and shellcheck.
 > Use `check-all` to run the full suite.
+
+[↑ Back to top](#dev-quality)
+
+---
+
+## Local development
+
+```bash
+git clone https://github.com/lipex360x/dev-quality
+cd dev-quality
+uv sync
+uv run pytest
+```
+
+All checkers live in `stacks/python/checkers/`. Tests live in `tests/`. Coverage must stay at 100%.
+
+> [!NOTE]
+> TDD is required — write the test file before the implementation. See `CLAUDE.md` for full contribution rules.
+
+[↑ Back to top](#dev-quality)
 
 ---
 
@@ -125,8 +223,6 @@ repos:
 | TypeScript | planned |
 
 ---
-
-## Reference
 
 Tooling decisions are documented in the [engineering-blueprint](https://github.com/lipex360x/engineering-blueprint).
 This repo is the implementation — the blueprint is the spec.
