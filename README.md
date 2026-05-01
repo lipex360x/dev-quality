@@ -140,7 +140,7 @@ winget install pre-commit
 ```yaml
 repos:
   - repo: https://github.com/lipex360x/dev-quality
-    rev: v0.5.0
+    rev: v0.7.0
     hooks:
       - id: check-all
 ```
