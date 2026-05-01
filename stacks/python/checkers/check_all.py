@@ -159,6 +159,7 @@ def main() -> None:
             ok = _run_on_files(
                 [
                     "ruff", "check",
+                    "--no-cache",
                     "--line-length", line_length,
                     "--select", "E,F,I,UP,B,SIM,RET,C,S,N,PLR2004",
                     "--extend-ignore", "S101",
@@ -170,7 +171,7 @@ def main() -> None:
 
             start = len(findings)
             ok = _run_on_files(
-                ["ruff", "format", "--check", "--line-length", line_length],
+                ["ruff", "format", "--check", "--no-cache", "--line-length", line_length],
                 py_files, findings,
             )
             results["ruff format"] = (ok, len(findings) - start)
@@ -179,8 +180,8 @@ def main() -> None:
         if "mypy" not in skip:
             start = len(findings)
             ok = _run_on_files(
-                ["mypy", "--strict", "--python-version", python_version,
-                 "--ignore-missing-imports"],
+                ["mypy", "--strict", "--no-incremental",
+                 "--python-version", python_version, "--ignore-missing-imports"],
                 py_files, findings,
             )
             results["mypy"] = (ok, len(findings) - start)
