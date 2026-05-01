@@ -64,7 +64,7 @@ programmatically.
 | Stack | Status | Checkers |
 |---|---|---|
 | Python | in progress | check_abbrev, check_comments, check_complexity, check_size, check_bash_tests, check_bash_logs |
-| Bash | planned | — |
+| Bash | in progress | check_abbrev, check_comments, check_complexity, check_size, check_bash_tests, check_bash_logs, shellcheck |
 | TypeScript | planned | — |
 
 ---
@@ -102,15 +102,17 @@ git tag v<new-version>
 git push origin v<new-version>
 ```
 
+**Only tag when the package behavior changes** — new checker, bug fix that affects output, new config param, new command, new hook. Do NOT tag for docs, CLAUDE.md updates, status changes, or test-only commits.
+
 **Semver rules — choose based on what was committed:**
 
 | Change | Bump |
 |---|---|
-| Bug fix, behavior correction, docs, tests only | `patch` — `v0.1.x` |
+| Bug fix, behavior correction | `patch` — `v0.1.x` |
 | New checker, new config param, new command, new hook | `minor` — `v0.x.0` |
 | Breaking change: hook renamed/removed, config key renamed, checker output format changed | `major` — `vx.0.0` |
 
-Always push the tag immediately after the commit. Never batch multiple features under a single tag bump.
+Always push the tag immediately after the version bump commit. Never batch multiple features under a single tag bump.
 
 ---
 

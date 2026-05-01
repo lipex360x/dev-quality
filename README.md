@@ -121,7 +121,7 @@ repos:
 | Stack | Status |
 |---|---|
 | Python | in progress |
-| Bash | planned |
+| Bash | in progress |
 | TypeScript | planned |
 
 ---
