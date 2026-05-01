@@ -239,11 +239,15 @@ uvx --from git+https://github.com/lipex360x/dev-quality check-all install-skill 
 Install the bundled skill file so your AI assistant can apply dev-quality rules while writing code — preventing violations before the commit runs:
 
 ```bash
-# Claude Code
+# Claude Code — permanent install
 check-all install-skill --target ~/.claude/skills
+
+# Claude Code — uvx (no install required)
+uvx --from git+https://github.com/lipex360x/dev-quality check-all install-skill --target ~/.claude/skills
 
 # Any other tool — point to its skills directory
 check-all install-skill --target <your-tool-skills-dir>
+uvx --from git+https://github.com/lipex360x/dev-quality check-all install-skill --target <your-tool-skills-dir>
 ```
 
 After installation, invoke `/dev-quality` in any session to load the rules.
