@@ -210,14 +210,24 @@ Cache: /tmp/dev-quality
   To disable: check-all --no-cache .
 ```
 
-**Cache commands:**
+**All `check-all` commands — with permanent install and with uvx:**
 
 ```bash
+# run all checkers
+check-all .
+uvx --from git+https://github.com/lipex360x/dev-quality check-all .
+
+# run without cache
+check-all --no-cache .
+uvx --from git+https://github.com/lipex360x/dev-quality check-all --no-cache .
+
 # clear the cache
 check-all --clear-cache
+uvx --from git+https://github.com/lipex360x/dev-quality check-all --clear-cache
 
-# run without using or writing cache
-check-all --no-cache .
+# install the AI assistant skill
+check-all install-skill --target ~/.claude/skills
+uvx --from git+https://github.com/lipex360x/dev-quality check-all install-skill --target ~/.claude/skills
 ```
 
 <div align="right"><a href="#dev-quality">↑ Back to top</a></div>
