@@ -11,10 +11,15 @@ py-modules = [
     "check_comments",
     "check_complexity",
     "check_size",
+    "install_skill",
 ]
+packages = ["dev_quality_skill"]
 
 [tool.setuptools.package-dir]
 "" = "stacks/python/checkers"
+
+[tool.setuptools.package-data]
+dev_quality_skill = ["SKILL.md"]
 
 [project]
 name = "dev-quality"
@@ -38,6 +43,7 @@ check-bash-tests = "check_bash_tests:main"
 check-comments = "check_comments:main"
 check-complexity = "check_complexity:main"
 check-size = "check_size:main"
+install-skill = "install_skill:main"
 
 [dependency-groups]
 dev = [
