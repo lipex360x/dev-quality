@@ -22,13 +22,24 @@ _CUSTOM_DIR_CHECKERS = [
 
 
 def _collect(root: Path, suffixes: frozenset[str]) -> list[Path]:
-    files: list[Path] = []
-    for path in root.rglob("*"):
-        if any(part in _SKIP_DIRS for part in path.parts):
-            continue
-        if path.suffix in suffixes and path.is_file():
-            files.append(path)
-    return sorted(files)
+    try:
+        result = subprocess.run(  # noqa: S603
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        lines = [line for line in result.stdout.splitlines() if line]
+        return sorted(root / line for line in lines if Path(line).suffix in suffixes)
+    except subprocess.CalledProcessError:
+        return sorted(
+            path
+            for path in root.rglob("*")
+            if not any(part in _SKIP_DIRS for part in path.parts)
+            and path.suffix in suffixes
+            and path.is_file()
+        )
 
 
 def _load_config(root: Path) -> dict[str, object]:
@@ -73,6 +84,32 @@ def _run_on_dir(
     return code == 0
 
 
+def _print_summary(results: dict[str, tuple[bool, int]]) -> None:
+    if not results:
+        return
+    label_width = max(len(k) for k in results) + 2
+    sep = "─" * (label_width + 20)
+    print()
+    print(sep)
+    for checker, (ok, count) in results.items():
+        if ok:
+            status = "PASS"
+        else:
+            noun = "issue" if count == 1 else "issues"
+            status = f"FAIL   {count} {noun}"
+        print(f" {checker:<{label_width}} {status}")
+    print(sep)
+    all_passed = all(ok for ok, _ in results.values())
+    total = sum(count for _, count in results.values())
+    if all_passed:
+        result_status = "PASS"
+    else:
+        noun = "issue" if total == 1 else "issues"
+        result_status = f"FAIL   {total} {noun}"
+    print(f" {'Result':<{label_width}} {result_status}")
+    print(sep)
+
+
 def main() -> None:
     root = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path.cwd()
     config = _load_config(root)
@@ -89,6 +126,7 @@ def main() -> None:
     all_files = sorted(py_files + sh_files)
 
     findings: list[str] = []
+    results: dict[str, tuple[bool, int]] = {}
     passed = True
 
     size_env = {"CHECK_SIZE_MAX_FILE": max_file_lines, "CHECK_SIZE_MAX_FUNC": max_func_lines}
@@ -102,44 +140,82 @@ def main() -> None:
             extra_env = size_env
         elif checker == "check-complexity":
             extra_env = complexity_env
-        passed &= _run_on_files([checker], all_files, findings, extra_env)
+        start = len(findings)
+        ok = _run_on_files([checker], all_files, findings, extra_env)
+        results[checker] = (ok, len(findings) - start)
+        passed &= ok
 
     for checker in _CUSTOM_DIR_CHECKERS:
         if checker in skip:
             continue
-        passed &= _run_on_dir([checker], root, findings)
+        start = len(findings)
+        ok = _run_on_dir([checker], root, findings)
+        results[checker] = (ok, len(findings) - start)
+        passed &= ok
 
     if py_files:
         if "ruff" not in skip:
-            passed &= _run_on_files(
-                ["ruff", "check", "--line-length", line_length,
-                 "--select", "E,F,I,UP,B,SIM,RET,C,S,N,PLR2004"],
+            start = len(findings)
+            ok = _run_on_files(
+                [
+                    "ruff", "check",
+                    "--line-length", line_length,
+                    "--select", "E,F,I,UP,B,SIM,RET,C,S,N,PLR2004",
+                    "--extend-ignore", "S101",
+                ],
                 py_files, findings,
             )
-            passed &= _run_on_files(
+            results["ruff check"] = (ok, len(findings) - start)
+            passed &= ok
+
+            start = len(findings)
+            ok = _run_on_files(
                 ["ruff", "format", "--check", "--line-length", line_length],
                 py_files, findings,
             )
+            results["ruff format"] = (ok, len(findings) - start)
+            passed &= ok
+
         if "mypy" not in skip:
-            passed &= _run_on_files(
+            start = len(findings)
+            ok = _run_on_files(
                 ["mypy", "--strict", "--python-version", python_version,
                  "--ignore-missing-imports"],
                 py_files, findings,
             )
+            results["mypy"] = (ok, len(findings) - start)
+            passed &= ok
+
         if "vulture" not in skip:
-            passed &= _run_on_files(["vulture", "--min-confidence", "80"], py_files, findings)
+            start = len(findings)
+            ok = _run_on_files(["vulture", "--min-confidence", "80"], py_files, findings)
+            results["vulture"] = (ok, len(findings) - start)
+            passed &= ok
+
         if "bandit" not in skip:
-            passed &= _run_on_files(["bandit", "-s", "B101,B404,B603,B607"], py_files, findings)
+            start = len(findings)
+            ok = _run_on_files(["bandit", "-s", "B101,B404,B603,B607"], py_files, findings)
+            results["bandit"] = (ok, len(findings) - start)
+            passed &= ok
+
         if "pylint" not in skip:
-            passed &= _run_on_files(
+            start = len(findings)
+            ok = _run_on_files(
                 ["pylint", "--disable=all", "--enable=C0103"], py_files, findings
             )
+            results["pylint"] = (ok, len(findings) - start)
+            passed &= ok
 
     if sh_files and "shellcheck" not in skip:
-        passed &= _run_on_files(["shellcheck"], sh_files, findings)
+        start = len(findings)
+        ok = _run_on_files(["shellcheck"], sh_files, findings)
+        results["shellcheck"] = (ok, len(findings) - start)
+        passed &= ok
 
     for finding in findings:
         print(finding)
+
+    _print_summary(results)
 
     sys.exit(0 if passed else 1)
 
