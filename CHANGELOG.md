@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.6.0] — 2026-05-01
+
+### Added
+- `install-skill` command: copies the bundled `SKILL.md` to any AI assistant's skills directory (`install-skill --target ~/.claude/skills`); defaults to `~/.claude/skills` when `--target` is omitted
+- `SKILL.md` bundled as package data in `dev_quality_skill` — full coding rules reference for Claude Code, installable via `/dev-quality` after running `install-skill`
+
+---
+
 ## [v0.5.0] — 2026-05-01
 
 ### Added
