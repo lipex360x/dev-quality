@@ -27,16 +27,34 @@ Single source of truth — no more copying tools across projects.
 
 ---
 
-## Rodar tudo em um projeto
+## Como usar
+
+### Análise pontual — `uvx` (sem instalação)
+
+Rode todos os checkers em qualquer projeto sem instalar nada:
 
 ```bash
 uvx --from git+https://github.com/lipex360x/dev-quality check-all /caminho/do/projeto
 ```
 
-Ou no diretório atual:
+Útil para auditar um projeto antes de configurar o pre-commit, ou em CI sem setup prévio.
+
+### Automatizado a cada commit — pre-commit
+
+Adicione ao `.pre-commit-config.yaml` do projeto alvo para rodar automaticamente:
+
+```yaml
+repos:
+  - repo: https://github.com/lipex360x/dev-quality
+    rev: v0.1.0
+    hooks:
+      - id: check-all
+```
+
+Depois instale os hooks:
 
 ```bash
-uvx --from git+https://github.com/lipex360x/dev-quality check-all .
+pre-commit install
 ```
 
 ---
@@ -76,23 +94,11 @@ O arquivo é opcional — sem ele, os padrões acima são aplicados.
 
 ---
 
-## Usar via pre-commit
+## Hooks individuais
 
-### Hook único (roda tudo)
-
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/lipex360x/dev-quality
-    rev: v0.1.0
-    hooks:
-      - id: check-all
-```
-
-### Hooks individuais
+Para usar apenas checkers específicos em vez do `check-all`:
 
 ```yaml
-# .pre-commit-config.yaml
 repos:
   - repo: https://github.com/lipex360x/dev-quality
     rev: v0.1.0
@@ -105,7 +111,7 @@ repos:
       - id: check-bash-logs
 ```
 
-> **Nota:** os hooks individuais não incluem ruff, mypy, vulture, bandit, pylint e shellcheck.
+> Os hooks individuais não incluem ruff, mypy, vulture, bandit, pylint e shellcheck.
 > Use `check-all` para rodar a suite completa.
 
 ---
