@@ -287,6 +287,9 @@ python_version: "3.12"
 
 The file is optional — defaults above apply when it is absent.
 
+> [!TIP]
+> The [`.dev-quality.yaml`](.dev-quality.yaml) at the root of this repo is a working example with all available keys.
+
 <div align="right"><a href="#dev-quality">↑ Back to top</a></div>
 
 ---
