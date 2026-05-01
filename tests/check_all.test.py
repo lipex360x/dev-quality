@@ -15,6 +15,7 @@ from check_all import (
     _run,
     _run_on_dir,
     _run_on_files,
+    _semgrep_config,
     _user_cache_dir,
     main,
 )
@@ -759,3 +760,177 @@ def test_main_prints_summary_on_failure(
     out = capsys.readouterr().out
     assert "Result" in out
     assert "FAIL" in out
+
+
+# --- _semgrep_config ---
+
+
+def test_semgrep_config_returns_none_when_no_rules(tmp_path: Path) -> None:
+    assert _semgrep_config(tmp_path) is None
+
+
+def test_semgrep_config_returns_semgrep_dir_when_yml_present(tmp_path: Path) -> None:
+    semgrep_dir = tmp_path / ".semgrep"
+    semgrep_dir.mkdir()
+    (semgrep_dir / "rules.yml").write_text("rules: []", encoding="utf-8")
+    assert _semgrep_config(tmp_path) == semgrep_dir
+
+
+def test_semgrep_config_returns_semgrep_dir_when_yaml_present(tmp_path: Path) -> None:
+    semgrep_dir = tmp_path / ".semgrep"
+    semgrep_dir.mkdir()
+    (semgrep_dir / "rules.yaml").write_text("rules: []", encoding="utf-8")
+    assert _semgrep_config(tmp_path) == semgrep_dir
+
+
+def test_semgrep_config_returns_none_when_dir_is_empty(tmp_path: Path) -> None:
+    (tmp_path / ".semgrep").mkdir()
+    assert _semgrep_config(tmp_path) is None
+
+
+def test_semgrep_config_returns_semgrep_yml_at_root(tmp_path: Path) -> None:
+    (tmp_path / "semgrep.yml").write_text("rules: []", encoding="utf-8")
+    assert _semgrep_config(tmp_path) == tmp_path / "semgrep.yml"
+
+
+def test_semgrep_config_returns_semgrep_yaml_at_root(tmp_path: Path) -> None:
+    (tmp_path / "semgrep.yaml").write_text("rules: []", encoding="utf-8")
+    assert _semgrep_config(tmp_path) == tmp_path / "semgrep.yaml"
+
+
+# --- main() semgrep ---
+
+
+def test_main_semgrep_runs_when_rules_found(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    semgrep_dir = tmp_path / ".semgrep"
+    semgrep_dir.mkdir()
+    (semgrep_dir / "rules.yml").write_text("rules: []", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("check_all._collect", side_effect=_stub_collect(tmp_path)):
+        with patch("subprocess.run", return_value=ok) as mock_run:
+            with patch("check_all.shutil.which", return_value="/usr/bin/semgrep"):
+                with pytest.raises(SystemExit):
+                    main()
+    called_commands = [call[0][0][0] for call in mock_run.call_args_list if call[0][0]]
+    assert "semgrep" in called_commands
+
+
+def test_main_semgrep_skipped_when_no_rules(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("check_all._collect", side_effect=_stub_collect(tmp_path)):
+        with patch("subprocess.run", return_value=ok) as mock_run:
+            with pytest.raises(SystemExit):
+                main()
+    called_commands = [call[0][0][0] for call in mock_run.call_args_list if call[0][0]]
+    assert "semgrep" not in called_commands
+
+
+def test_main_semgrep_skipped_when_not_in_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    semgrep_dir = tmp_path / ".semgrep"
+    semgrep_dir.mkdir()
+    (semgrep_dir / "rules.yml").write_text("rules: []", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("check_all._collect", side_effect=_stub_collect(tmp_path)):
+        with patch("subprocess.run", return_value=ok) as mock_run:
+            with patch("check_all.shutil.which", return_value=None):
+                with pytest.raises(SystemExit):
+                    main()
+    called_commands = [call[0][0][0] for call in mock_run.call_args_list if call[0][0]]
+    assert "semgrep" not in called_commands
+
+
+def test_main_skip_semgrep_via_config(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    semgrep_dir = tmp_path / ".semgrep"
+    semgrep_dir.mkdir()
+    (semgrep_dir / "rules.yml").write_text("rules: []", encoding="utf-8")
+    _write_config(tmp_path, {"skip": ["semgrep"]})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("check_all._collect", side_effect=_stub_collect(tmp_path)):
+        with patch("subprocess.run", return_value=ok) as mock_run:
+            with patch("check_all.shutil.which", return_value="/usr/bin/semgrep"):
+                with pytest.raises(SystemExit):
+                    main()
+    called_commands = [call[0][0][0] for call in mock_run.call_args_list if call[0][0]]
+    assert "semgrep" not in called_commands
+
+
+def test_main_semgrep_uses_config_arg(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    semgrep_dir = tmp_path / ".semgrep"
+    semgrep_dir.mkdir()
+    (semgrep_dir / "rules.yml").write_text("rules: []", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("check_all._collect", side_effect=_stub_collect(tmp_path)):
+        with patch("subprocess.run", return_value=ok) as mock_run:
+            with patch("check_all.shutil.which", return_value="/usr/bin/semgrep"):
+                with pytest.raises(SystemExit):
+                    main()
+    semgrep_calls = [
+        call[0][0] for call in mock_run.call_args_list if call[0][0][0] == "semgrep"
+    ]
+    assert semgrep_calls
+    args = semgrep_calls[0]
+    assert "--config" in args
+    config_idx = args.index("--config")
+    assert args[config_idx + 1] == str(semgrep_dir)
+
+
+def test_main_semgrep_exits_1_on_finding(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    semgrep_dir = tmp_path / ".semgrep"
+    semgrep_dir.mkdir()
+    (semgrep_dir / "rules.yml").write_text("rules: []", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    fail = MagicMock(returncode=1, stdout="Finding: bad.py:10", stderr="")
+    with patch("check_all._collect", side_effect=_stub_collect(tmp_path)):
+        with patch("subprocess.run", return_value=fail):
+            with patch("check_all.shutil.which", return_value="/usr/bin/semgrep"):
+                with pytest.raises(SystemExit) as raised:
+                    main()
+    assert raised.value.code == 1
+
+
+# --- main() PLR2004 per-file-ignores ---
+
+
+def test_main_ruff_check_has_per_file_ignores_for_plr2004(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])):
+        with patch("subprocess.run", return_value=ok) as mock_run:
+            with pytest.raises(SystemExit):
+                main()
+    ruff_check_calls = [
+        call[0][0]
+        for call in mock_run.call_args_list
+        if call[0][0] and call[0][0][0] == "ruff" and "check" in call[0][0]
+    ]
+    assert ruff_check_calls
+    args = ruff_check_calls[0]
+    pfi_indices = [idx for idx, arg in enumerate(args) if arg == "--per-file-ignores"]
+    pfi_values = [args[idx + 1] for idx in pfi_indices]
+    assert any("PLR2004" in val for val in pfi_values)

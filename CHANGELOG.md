@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.5.0] — 2026-05-01
+
+### Added
+- `semgrep` checker: runs automatically when the target project has a `.semgrep/` directory (with `.yml`/`.yaml` rules) or a `semgrep.yml`/`semgrep.yaml` at root; silently skipped when rules are absent or semgrep is not installed; respectable via `skip: [semgrep]` in `.dev-quality.yaml`
+- `PLR2004` (magic value comparisons) now ignored in test files via `--per-file-ignores` for `tests/*.py`, `test_*.py`, and `*_test.py` patterns
+
+---
+
 ## [v0.4.0] — 2026-05-01
 
 ### Added

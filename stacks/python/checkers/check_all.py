@@ -57,6 +57,19 @@ def _do_clear_cache() -> None:
         print(f"No cache found at: {cache_dir}")
 
 
+def _semgrep_config(root: Path) -> Path | None:
+    semgrep_dir = root / ".semgrep"
+    if semgrep_dir.is_dir() and (
+        any(semgrep_dir.glob("*.yml")) or any(semgrep_dir.glob("*.yaml"))
+    ):
+        return semgrep_dir
+    for name in ("semgrep.yml", "semgrep.yaml"):
+        candidate = root / name
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def _load_config(root: Path) -> dict[str, object]:
     config_file = root / ".dev-quality.yaml"
     if not config_file.exists():
@@ -210,6 +223,9 @@ def main() -> None:
                     "--line-length", line_length,
                     "--select", "E,F,I,UP,B,SIM,RET,C,S,N,PLR2004",
                     "--extend-ignore", "S101",
+                    "--per-file-ignores", "tests/*.py:PLR2004",
+                    "--per-file-ignores", "test_*.py:PLR2004",
+                    "--per-file-ignores", "*_test.py:PLR2004",
                 ],
                 py_files, findings,
             )
@@ -265,6 +281,14 @@ def main() -> None:
         ok = _run_on_files(["shellcheck"], sh_files, findings)
         _print_findings(findings)
         results["shellcheck"] = (ok, len(findings))
+        passed &= ok
+
+    semgrep_conf = _semgrep_config(root)
+    if semgrep_conf and "semgrep" not in skip and shutil.which("semgrep"):
+        findings = []
+        ok = _run_on_dir(["semgrep", "--config", str(semgrep_conf), "--error"], root, findings)
+        _print_findings(findings)
+        results["semgrep"] = (ok, len(findings))
         passed &= ok
 
     _print_summary(results)

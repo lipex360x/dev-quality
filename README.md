@@ -4,7 +4,7 @@
 
 Central repository for code quality tooling across stacks. Houses custom checker scripts, pre-commit hook definitions, and bootstrap scripts. Single source of truth — no more copying tools across projects.
 
-[![Version](https://img.shields.io/badge/version-v0.4.0-blue)](https://github.com/lipex360x/dev-quality/releases)
+[![Version](https://img.shields.io/badge/version-v0.5.0-blue)](https://github.com/lipex360x/dev-quality/releases)
 
 ---
 
@@ -39,12 +39,13 @@ Central repository for code quality tooling across stacks. Houses custom checker
 
 | Hook | What it validates |
 |---|---|
-| `ruff check` | Linting: imports, style, bugs, McCabe complexity, security |
+| `ruff check` | Linting: imports, style, bugs, McCabe complexity, security; PLR2004 suppressed in test files |
 | `ruff format` | Code formatting |
 | `mypy` | Static type checking in strict mode |
-| `vulture` | Dead code (unused functions and variables) |
+| `vulture` | Dead code (unused functions, variables, imports) |
 | `bandit` | Security vulnerabilities |
 | `pylint C0103` | Variable and function naming conventions |
+| `semgrep` | Custom rules — runs automatically when `.semgrep/` or `semgrep.yml` exists at project root |
 
 ### Bash
 
@@ -119,7 +120,7 @@ Add to the target project's `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/lipex360x/dev-quality
-    rev: v0.4.0
+    rev: v0.5.0
     hooks:
       - id: check-all
 ```
@@ -210,7 +211,7 @@ Create a `.dev-quality.yaml` at the project root to customize `check-all` behavi
 # Checkers to skip (any combination of the names below)
 # check-abbrev, check-comments, check-size, check-complexity,
 # check-bash-tests, check-bash-logs,
-# ruff, mypy, vulture, bandit, pylint, shellcheck
+# ruff, mypy, vulture, bandit, pylint, shellcheck, semgrep
 skip:
   - check-bash-logs
   - check-bash-tests
@@ -244,7 +245,7 @@ To use specific checkers instead of `check-all`:
 ```yaml
 repos:
   - repo: https://github.com/lipex360x/dev-quality
-    rev: v0.4.0
+    rev: v0.5.0
     hooks:
       - id: check-abbrev
       - id: check-comments
