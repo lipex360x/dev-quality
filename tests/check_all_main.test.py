@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.metadata
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -459,6 +460,42 @@ def test_main_prints_cache_hint_after_run(
     assert str(tmp_path / "cache") in out
     assert "--clear-cache" in out
     assert "--no-cache" in out
+
+
+def test_main_prints_version_before_cache(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with (
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
+        patch("subprocess.run", return_value=ok),
+        pytest.raises(SystemExit),
+    ):
+        main()
+    out = capsys.readouterr().out
+    version_index = out.index("Version:")
+    cache_index = out.index("Cache:")
+    assert version_index < cache_index
+
+
+def test_main_prints_unknown_version_when_package_not_found(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with (
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
+        patch("subprocess.run", return_value=ok),
+        patch("check_all.importlib.metadata.version", side_effect=importlib.metadata.PackageNotFoundError),
+        pytest.raises(SystemExit),
+    ):
+        main()
+    assert "Version: unknown" in capsys.readouterr().out
 
 
 def test_main_no_cache_flag_omits_cache_hint(

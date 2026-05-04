@@ -161,6 +161,11 @@ def _print_summary(results: dict[str, tuple[bool, int]]) -> None:
 
 
 def _print_cache_hint(cache_dir: Path) -> None:
+    try:
+        version = f"v{importlib.metadata.version('dev-quality')}"
+    except importlib.metadata.PackageNotFoundError:
+        version = "unknown"
+    print(f"Version: {version}")
     print(f"Cache: {cache_dir}")
     print("  To clear:   check-all --clear-cache")
     print("  To disable: check-all --no-cache .")

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.15.3] — 2026-05-04
+
+### Added
+- `check-all`: prints `Version: vX.Y.Z` before the `Cache:` line at the end of every run, making it clear which version of the validator is executing.
+
+---
+
 ## [v0.15.2] — 2026-05-04
 
 ### Changed
