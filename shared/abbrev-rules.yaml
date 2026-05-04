@@ -6,14 +6,25 @@ purpose: >
   Add to denylist when a new abbreviation surfaces in code review.
 
 denylist:
+  - addr    # → address
+  - arg     # → argument
+  - arr     # → array
   - attr    # → attribute
+  - auth    # → authentication
+  - avg     # → average
+  - btn     # → button
   - buf     # → buffer
   - cfg     # → config / configuration
   - cmd     # → command
+  - cnt     # → count
   - col     # → column / color
+  - conn    # → connection
+  - creds   # → credentials
   - ctx     # → context
   - db      # → database
+  - desc    # → description
   - dest    # → destination
+  - dir     # → directory
   - doc     # → document
   - dst     # → destination
   - elem    # → element
@@ -24,20 +35,43 @@ denylist:
   - fmt     # → format
   - fn      # → function
   - func    # → function
+  - hdr     # → header
+  - hdrs    # → headers
   - idx     # → index
   - img     # → image
+  - impl    # → implementation
+  - info    # → information
+  - lst     # → list
+  - meta    # → metadata
   - mod     # → module
   - msg     # → message
   - num     # → number
   - obj     # → object
   - opts    # → options
+  - param   # → parameter
+  - params  # → parameters
+  - perm    # → permission
+  - perms   # → permissions
   - pkg     # → package
+  - prop    # → property
+  - props   # → properties
+  - pwd     # → password
+  - qry     # → query
+  - qty     # → quantity
+  - rec     # → record
   - ref     # → reference
   - req     # → request
   - res     # → response / result
+  - resp    # → response
   - sep     # → separator
+  - sess    # → session
   - src     # → source
+  - tbl     # → table
+  - tkn     # → token
   - tmp     # → temp / temporary
+  - tok     # → token
+  - uri     # → URI (Uniform Resource Identifier)
+  - url     # → URL (Uniform Resource Locator)
   - usr     # → user
   - val     # → value
   - var     # → variable
@@ -53,7 +87,6 @@ allowlist:
   - _
   - id
   - ok
-  - io
 
 allowlist_sh:
   - dest    # counterpart to src in file-operation functions

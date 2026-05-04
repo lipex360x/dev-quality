@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 from check_abbrev import (
+    _DEFAULT_DENYLIST,
     _check_bash_file,
     _check_file,
     _load_rules,
@@ -362,3 +363,96 @@ def test_bash_for_loop_variable_flagged_by_length(tmp_path: Path) -> None:
     path = _sh(tmp_path, 'for cc in *.py; do echo "$cc"; done\n')
     findings = _check_bash_file(path, _DENY, _ALLOW, min_length=2)
     assert any("cc" in finding for finding in findings)
+
+
+_EXPANDED_3_CHAR = [
+    "arg",
+    "arr",
+    "avg",
+    "btn",
+    "cnt",
+    "dir",
+    "hdr",
+    "lst",
+    "pwd",
+    "qry",
+    "qty",
+    "rec",
+    "tbl",
+    "tkn",
+    "tok",
+    "uri",
+    "url",
+]
+_EXPANDED_4_CHAR = [
+    "addr",
+    "auth",
+    "conn",
+    "desc",
+    "hdrs",
+    "impl",
+    "info",
+    "meta",
+    "perm",
+    "prop",
+    "resp",
+    "sess",
+]
+_EXPANDED_5_PLUS = ["creds", "param", "params", "perms", "props"]
+
+
+def test_default_denylist_includes_expanded_3_char_entries() -> None:
+    for entry in _EXPANDED_3_CHAR:
+        assert entry in _DEFAULT_DENYLIST, f"{entry!r} missing from _DEFAULT_DENYLIST"
+
+
+def test_default_denylist_includes_expanded_4_char_entries() -> None:
+    for entry in _EXPANDED_4_CHAR:
+        assert entry in _DEFAULT_DENYLIST, f"{entry!r} missing from _DEFAULT_DENYLIST"
+
+
+def test_default_denylist_includes_expanded_5_plus_entries() -> None:
+    for entry in _EXPANDED_5_PLUS:
+        assert entry in _DEFAULT_DENYLIST, f"{entry!r} missing from _DEFAULT_DENYLIST"
+
+
+def test_yaml_denylist_includes_expanded_entries() -> None:
+    rules_path = Path(__file__).parent.parent / "shared" / "abbrev-rules.yaml"
+    deny, _, _, _ = _load_rules(rules_path)
+    for entry in _EXPANDED_3_CHAR + _EXPANDED_4_CHAR + _EXPANDED_5_PLUS:
+        assert entry in deny, f"{entry!r} missing from abbrev-rules.yaml denylist"
+
+
+def test_check_file_flags_url(tmp_path: Path) -> None:
+    deny, allow, _, min_length = _load_rules(None)
+    path = _py(tmp_path, "url = 'https://example.com'\n")
+    findings = _check_file(path, deny, allow, min_length)
+    assert any("url" in finding for finding in findings)
+
+
+def test_check_file_flags_conn(tmp_path: Path) -> None:
+    deny, allow, _, min_length = _load_rules(None)
+    path = _py(tmp_path, "conn = database.connect()\n")
+    findings = _check_file(path, deny, allow, min_length)
+    assert any("conn" in finding for finding in findings)
+
+
+def test_check_file_flags_auth(tmp_path: Path) -> None:
+    deny, allow, _, min_length = _load_rules(None)
+    path = _py(tmp_path, "auth = get_authentication()\n")
+    findings = _check_file(path, deny, allow, min_length)
+    assert any("auth" in finding for finding in findings)
+
+
+def test_check_file_flags_params(tmp_path: Path) -> None:
+    deny, allow, _, min_length = _load_rules(None)
+    path = _py(tmp_path, "params = build_query_parameters()\n")
+    findings = _check_file(path, deny, allow, min_length)
+    assert any("params" in finding for finding in findings)
+
+
+def test_check_file_flags_creds(tmp_path: Path) -> None:
+    deny, allow, _, min_length = _load_rules(None)
+    path = _py(tmp_path, "creds = load_credentials()\n")
+    findings = _check_file(path, deny, allow, min_length)
+    assert any("creds" in finding for finding in findings)

@@ -353,7 +353,7 @@ def _build_abbrev_env(config: dict[str, object]) -> dict[str, str]:
 def main() -> None:
     clear_cache = "--clear-cache" in sys.argv
     no_cache = "--no-cache" in sys.argv
-    args = [arg for arg in sys.argv[1:] if arg not in {"--no-cache", "--clear-cache"}]
+    args = [flag for flag in sys.argv[1:] if flag not in {"--no-cache", "--clear-cache"}]
 
     if clear_cache:
         _do_clear_cache()

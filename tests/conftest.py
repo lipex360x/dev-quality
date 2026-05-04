@@ -34,9 +34,9 @@ def _stub_collect(
     py_files = [tmp_path / name for name in python_names]
     sh_files = [tmp_path / name for name in shell_names]
 
-    def impl(root: Path, suffixes: frozenset[str]) -> list[Path]:
+    def stub(root: Path, suffixes: frozenset[str]) -> list[Path]:
         if ".py" in suffixes:
             return list(py_files)
         return list(sh_files)
 
-    return impl
+    return stub

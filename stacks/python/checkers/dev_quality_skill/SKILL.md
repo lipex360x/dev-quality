@@ -87,14 +87,25 @@ Never use these as identifiers:
 
 | Abbreviation | Use instead |
 |---|---|
+| `addr` | `address` |
+| `arg` | `argument` |
+| `arr` | `array` |
 | `attr` | `attribute` |
+| `auth` | `authentication` |
+| `avg` | `average` |
+| `btn` | `button` |
 | `buf` | `buffer` |
 | `cfg` | `config` or `configuration` |
 | `cmd` | `command` |
+| `cnt` | `count` |
 | `col` | `column` or `color` |
+| `conn` | `connection` |
+| `creds` | `credentials` |
 | `ctx` | `context` |
 | `db` | `database` |
+| `desc` | `description` |
 | `dest` | `destination` |
+| `dir` | `directory` |
 | `doc` | `document` |
 | `dst` | `destination` |
 | `elem` | `element` |
@@ -105,20 +116,43 @@ Never use these as identifiers:
 | `fmt` | `format` |
 | `fn` | `function` |
 | `func` | `function` |
+| `hdr` | `header` |
+| `hdrs` | `headers` |
 | `idx` | `index` |
 | `img` | `image` |
+| `impl` | `implementation` |
+| `info` | `information` |
+| `lst` | `list` |
+| `meta` | `metadata` |
 | `mod` | `module` |
 | `msg` | `message` |
 | `num` | `number` |
 | `obj` | `object` |
 | `opts` | `options` |
+| `param` | `parameter` |
+| `params` | `parameters` |
+| `perm` | `permission` |
+| `perms` | `permissions` |
 | `pkg` | `package` |
+| `prop` | `property` |
+| `props` | `properties` |
+| `pwd` | `password` |
+| `qry` | `query` |
+| `qty` | `quantity` |
+| `rec` | `record` |
 | `ref` | `reference` |
 | `req` | `request` |
 | `res` | `response` or `result` |
+| `resp` | `response` |
 | `sep` | `separator` |
+| `sess` | `session` |
 | `src` | `source` |
+| `tbl` | `table` |
+| `tkn` | `token` |
 | `tmp` | `temporary` |
+| `tok` | `token` |
+| `uri` | `URI` |
+| `url` | `URL` |
 | `usr` | `user` |
 | `val` | `value` |
 | `var` | `variable` |

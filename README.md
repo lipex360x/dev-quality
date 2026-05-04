@@ -203,7 +203,18 @@ Two complementary rules run together:
 Any identifier with 2 or fewer characters is flagged — unless it appears in the allowlist.
 
 **2. Known abbreviations (any length)**
-Names in the denylist are always flagged: `buf`, `cfg`, `cmd`, `ctx`, `err`, `exc`, `ext`, `fmt`, `func`, `idx`, `msg`, `ref`, `tmp`, and [more](shared/abbrev-rules.yaml).
+Names in the denylist are always flagged regardless of length. The full list is in [`shared/abbrev-rules.yaml`](shared/abbrev-rules.yaml). Key entries:
+
+| Category | Flagged names |
+|---|---|
+| Config / context | `cfg`, `ctx`, `opts` |
+| Error handling | `err`, `exc` |
+| Data / types | `attr`, `buf`, `obj`, `val`, `var` |
+| I/O | `img`, `src`, `dst`, `dest` |
+| Structure | `arr`, `lst`, `rec`, `tbl` |
+| Network / auth | `url`, `uri`, `auth`, `conn`, `sess`, `creds` |
+| Naming | `arg`, `param`, `params`, `prop`, `props` |
+| Misc | `avg`, `cnt`, `desc`, `dir`, `hdr`, `impl`, `info`, `meta`, `perm`, `perms`, `pwd`, `qry`, `qty`, `resp`, `tmp`, `tkn` |
 
 **Default allowlist — names that are never flagged:**
 

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.8.1] — 2026-05-04
+
+### Added
+- `check-abbrev`: expanded denylist from 35 to 69 entries — covers common 3–5 char abbreviations that `min_length=2` alone does not catch: `addr`, `arg`, `arr`, `auth`, `avg`, `btn`, `cnt`, `conn`, `creds`, `desc`, `dir`, `hdr`, `hdrs`, `impl`, `info`, `lst`, `meta`, `param`, `params`, `perm`, `perms`, `prop`, `props`, `pwd`, `qry`, `qty`, `rec`, `resp`, `sess`, `tbl`, `tkn`, `tok`, `uri`, `url`
+
+---
+
 ## [v0.8.0] — 2026-05-04
 
 ### Added

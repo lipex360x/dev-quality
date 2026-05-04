@@ -119,7 +119,7 @@ def test_main_line_length_passed_to_ruff(
         pytest.raises(SystemExit),
     ):
         main()
-    all_args = [arg for call in mock_run.call_args_list for arg in call[0][0]]
+    all_args = [item for call in mock_run.call_args_list for item in call[0][0]]
     assert "120" in all_args
 
 
@@ -268,7 +268,7 @@ def test_main_python_version_passed_to_mypy(
         pytest.raises(SystemExit),
     ):
         main()
-    all_args = [arg for call in mock_run.call_args_list for arg in call[0][0]]
+    all_args = [item for call in mock_run.call_args_list for item in call[0][0]]
     assert "3.12" in all_args
 
 
@@ -720,7 +720,7 @@ def test_main_ruff_check_has_per_file_ignores_for_plr2004(
     ]
     assert ruff_check_calls
     args = ruff_check_calls[0]
-    per_file_positions = [index for index, arg in enumerate(args) if arg == "--per-file-ignores"]
+    per_file_positions = [index for index, flag in enumerate(args) if flag == "--per-file-ignores"]
     per_file_values = [args[index + 1] for index in per_file_positions]
     assert any("PLR2004" in value for value in per_file_values)
 
