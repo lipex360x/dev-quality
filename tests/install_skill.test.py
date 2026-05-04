@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from install_skill import (
     _config_file,
+    _copy_skill_files,
     _load_skill_path,
     _resolve_target,
     _save_skill_path,
@@ -96,6 +97,38 @@ def test_resolve_target_exits_when_target_flag_has_no_value(
     assert raised.value.code == 1
 
 
+def test_copy_skill_files_creates_skill_md(tmp_path: Path) -> None:
+    _copy_skill_files(tmp_path)
+    assert (tmp_path / "SKILL.md").exists()
+
+
+def test_copy_skill_files_creates_python_md(tmp_path: Path) -> None:
+    _copy_skill_files(tmp_path)
+    assert (tmp_path / "python.md").exists()
+
+
+def test_copy_skill_files_creates_bash_md(tmp_path: Path) -> None:
+    _copy_skill_files(tmp_path)
+    assert (tmp_path / "bash.md").exists()
+
+
+def test_copy_skill_files_creates_parent_directory(tmp_path: Path) -> None:
+    destination = tmp_path / "nested" / "dir"
+    _copy_skill_files(destination)
+    assert destination.is_dir()
+
+
+def test_copy_skill_files_returns_sorted_paths(tmp_path: Path) -> None:
+    result = _copy_skill_files(tmp_path)
+    names = [path.name for path in result]
+    assert names == sorted(names)
+
+
+def test_copy_skill_files_returns_only_md_files(tmp_path: Path) -> None:
+    result = _copy_skill_files(tmp_path)
+    assert all(path.suffix == ".md" for path in result)
+
+
 def test_install_creates_skill_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     config = tmp_path / "skill_path"
     monkeypatch.setattr(sys, "argv", ["install-skill", "--target", str(tmp_path)])
@@ -103,13 +136,14 @@ def test_install_creates_skill_directory(tmp_path: Path, monkeypatch: pytest.Mon
     assert (tmp_path / "dev-quality").is_dir()
 
 
-def test_install_writes_skill_md(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_install_copies_all_md_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     config = tmp_path / "skill_path"
     monkeypatch.setattr(sys, "argv", ["install-skill", "--target", str(tmp_path)])
     main(config_file=config)
-    destination = tmp_path / "dev-quality" / "SKILL.md"
-    assert destination.exists()
-    assert len(destination.read_text(encoding="utf-8")) > 100
+    destination = tmp_path / "dev-quality"
+    assert (destination / "SKILL.md").exists()
+    assert (destination / "python.md").exists()
+    assert (destination / "bash.md").exists()
 
 
 def test_install_skill_md_contains_dev_quality(
@@ -122,7 +156,19 @@ def test_install_skill_md_contains_dev_quality(
     assert "dev-quality" in content
 
 
-def test_install_prints_destination(
+def test_install_prints_destination_directory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    config = tmp_path / "skill_path"
+    monkeypatch.setattr(sys, "argv", ["install-skill", "--target", str(tmp_path)])
+    main(config_file=config)
+    out = capsys.readouterr().out
+    assert str(tmp_path / "dev-quality") in out
+
+
+def test_install_prints_each_installed_file(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -132,9 +178,11 @@ def test_install_prints_destination(
     main(config_file=config)
     out = capsys.readouterr().out
     assert "SKILL.md" in out
+    assert "python.md" in out
+    assert "bash.md" in out
 
 
-def test_install_overwrites_existing_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_install_overwrites_existing_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     config = tmp_path / "skill_path"
     destination_dir = tmp_path / "dev-quality"
     destination_dir.mkdir()
@@ -164,6 +212,8 @@ def test_install_updates_without_target_when_path_is_saved(
     monkeypatch.setattr(sys, "argv", ["install-skill"])
     main(config_file=config)
     assert (skills_dir / "dev-quality" / "SKILL.md").exists()
+    assert (skills_dir / "dev-quality" / "python.md").exists()
+    assert (skills_dir / "dev-quality" / "bash.md").exists()
 
 
 def test_install_prints_updated_path_on_update(
@@ -176,4 +226,5 @@ def test_install_prints_updated_path_on_update(
     config.write_text(str(skills_dir), encoding="utf-8")
     monkeypatch.setattr(sys, "argv", ["install-skill"])
     main(config_file=config)
-    assert "SKILL.md" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "SKILL.md" in out

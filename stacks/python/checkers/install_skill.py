@@ -37,17 +37,28 @@ def _resolve_target(config_file: Path) -> Path:
     sys.exit(1)
 
 
+def _copy_skill_files(destination_dir: Path) -> list[Path]:
+    package = files("dev_quality_skill")
+    destination_dir.mkdir(parents=True, exist_ok=True)
+    installed: list[Path] = []
+    for resource in sorted(package.iterdir(), key=lambda resource: resource.name):
+        if resource.name.endswith(".md"):
+            destination = destination_dir / resource.name
+            destination.write_text(resource.read_text(encoding="utf-8"), encoding="utf-8")
+            installed.append(destination)
+    return installed
+
+
 def main(config_file: Path | None = None) -> None:
     if config_file is None:
         config_file = _config_file()
     target = _resolve_target(config_file).expanduser()
     destination_dir = target / "dev-quality"
-    destination_dir.mkdir(parents=True, exist_ok=True)
-    destination = destination_dir / "SKILL.md"
-    skill_text = files("dev_quality_skill").joinpath("SKILL.md").read_text(encoding="utf-8")
-    destination.write_text(skill_text, encoding="utf-8")
+    installed = _copy_skill_files(destination_dir)
     _save_skill_path(target, config_file)
-    print(f"Skill installed at {destination}")
+    print(f"Skill installed at {destination_dir}")
+    for path in installed:
+        print(f"  {path.name}")
 
 
 if __name__ == "__main__":

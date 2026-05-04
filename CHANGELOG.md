@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.13.0] — 2026-05-04
+
+### Changed
+- `SKILL.md` restructured into a language-agnostic Core layer. Python-specific rules moved to `python.md`; Bash-specific rules moved to `bash.md`. Adding a new language means adding a new `.md` file — the Core stays unchanged.
+- `SKILL.md` frontmatter simplified to portable-only fields (`name`, `description`). Removed `allowed-tools` and `user-invocable` (Claude Code-only keys that caused VS Code agent warnings and limited portability to other AI tools).
+- `install-skill` now copies all `.md` files from the package to `<target>/dev-quality/` instead of only `SKILL.md`. Future language files are installed automatically.
+- `pyproject.toml`: package-data changed from `["SKILL.md"]` to `["*.md"]` so new language files are included in the wheel without manual intervention.
+
+---
+
 ## [v0.12.1] — 2026-05-04
 
 ### Fixed

@@ -20,7 +20,7 @@ packages = ["dev_quality_skill"]
 "" = "stacks/python/checkers"
 
 [tool.setuptools.package-data]
-dev_quality_skill = ["SKILL.md"]
+dev_quality_skill = ["*.md"]
 
 [project]
 name = "dev-quality"
