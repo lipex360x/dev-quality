@@ -309,6 +309,10 @@ uvx --from git+https://github.com/lipex360x/dev-quality check-all --clear-cache
 # install the AI assistant skill
 check-all install-skill --target ~/.claude/skills
 uvx --from git+https://github.com/lipex360x/dev-quality check-all install-skill --target ~/.claude/skills
+
+# update the skill in-place (uses the path saved during the last install)
+install-skill
+uvx --from git+https://github.com/lipex360x/dev-quality install-skill
 ```
 
 <div align="right"><a href="#dev-quality">↑ Back to top</a></div>
@@ -320,7 +324,7 @@ uvx --from git+https://github.com/lipex360x/dev-quality check-all install-skill 
 Install the bundled skill file so your AI assistant can apply dev-quality rules while writing code — preventing violations before the commit runs:
 
 ```bash
-# Claude Code — permanent install
+# Claude Code — first install
 check-all install-skill --target ~/.claude/skills
 
 # Claude Code — uvx (no install required)
@@ -328,7 +332,14 @@ uvx --from git+https://github.com/lipex360x/dev-quality check-all install-skill 
 
 # Any other tool — point to its skills directory
 check-all install-skill --target <your-tool-skills-dir>
-uvx --from git+https://github.com/lipex360x/dev-quality check-all install-skill --target <your-tool-skills-dir>
+```
+
+After installation the target path is saved to `~/.config/dev-quality/skill_path`. Subsequent updates only need:
+
+```bash
+# Update in-place — no --target needed
+install-skill
+uvx --from git+https://github.com/lipex360x/dev-quality install-skill
 ```
 
 After installation, invoke `/dev-quality` in any session to load the rules.
@@ -347,6 +358,7 @@ Create a `.dev-quality.yaml` at the project root to customize `check-all` behavi
 | `line_length` | `100` | Maximum line length passed to ruff |
 | `max_complexity` | `6` | Maximum cyclomatic complexity for Bash functions |
 | `max_file_lines` | `800` | Maximum number of lines per file |
+| `max_test_file_lines` | `1500` | Maximum number of lines per test file |
 | `max_func_lines` | `100` | Maximum number of lines per function |
 | `python_version` | `"3.11"` | Python version passed to mypy |
 | `abbrev_min_length` | `2` | Flag identifiers with this many characters or fewer (set to `0` to use denylist only) |
@@ -360,6 +372,7 @@ skip:
 line_length: 100
 max_complexity: 6
 max_file_lines: 800
+max_test_file_lines: 1500
 max_func_lines: 100
 python_version: "3.11"
 abbrev_min_length: 2
