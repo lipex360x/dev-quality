@@ -14,6 +14,7 @@ from check_all import (
     _run_on_dir,
     _run_on_files,
     _user_cache_dir,
+    _warn_if_precommit_outdated,
 )
 from conftest import _make_files, _write_config
 
@@ -276,3 +277,61 @@ def test_print_summary_result_fail_aggregates_total(capsys: pytest.CaptureFixtur
 def test_user_cache_dir_returns_path_under_tmp() -> None:
     result = _user_cache_dir()
     assert result == Path(tempfile.gettempdir()) / "dev-quality"
+
+
+def _write_precommit_config(directory: Path, repo_url: str, revision: str) -> None:
+    content = (
+        f"repos:\n  - repo: {repo_url}\n    rev: {revision}\n    hooks:\n      - id: check-all\n"
+    )
+    (directory / ".pre-commit-config.yaml").write_text(content, encoding="utf-8")
+
+
+def test_warn_if_precommit_outdated_warns_when_rev_is_old(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _write_precommit_config(tmp_path, "https://github.com/lipex360x/dev-quality", "v0.7.0")
+    with patch("importlib.metadata.version", return_value="0.8.1"):
+        _warn_if_precommit_outdated(tmp_path)
+    out = capsys.readouterr().out
+    assert "WARNING" in out
+    assert "v0.7.0" in out
+    assert "v0.8.1" in out
+    assert "pre-commit autoupdate" in out
+
+
+def test_warn_if_precommit_outdated_silent_when_rev_matches(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _write_precommit_config(tmp_path, "https://github.com/lipex360x/dev-quality", "v0.8.1")
+    with patch("importlib.metadata.version", return_value="0.8.1"):
+        _warn_if_precommit_outdated(tmp_path)
+    assert capsys.readouterr().out == ""
+
+
+def test_warn_if_precommit_outdated_silent_when_no_config(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _warn_if_precommit_outdated(tmp_path)
+    assert capsys.readouterr().out == ""
+
+
+def test_warn_if_precommit_outdated_silent_when_different_repo(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _write_precommit_config(tmp_path, "https://github.com/psf/black", "24.0.0")
+    with patch("importlib.metadata.version", return_value="0.8.1"):
+        _warn_if_precommit_outdated(tmp_path)
+    assert capsys.readouterr().out == ""
+
+
+def test_warn_if_precommit_outdated_silent_on_malformed_yaml(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (tmp_path / ".pre-commit-config.yaml").write_text(":", encoding="utf-8")
+    _warn_if_precommit_outdated(tmp_path)
+    assert capsys.readouterr().out == ""

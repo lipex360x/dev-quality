@@ -766,3 +766,31 @@ def test_do_install_skill_writes_skill_md(tmp_path: Path) -> None:
 
     _do_install_skill(str(tmp_path))
     assert (tmp_path / "dev-quality" / "SKILL.md").exists()
+
+
+def test_main_warns_when_precommit_rev_is_outdated(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    config = tmp_path / ".pre-commit-config.yaml"
+    config.write_text(
+        "repos:\n"
+        "  - repo: https://github.com/lipex360x/dev-quality\n"
+        "    rev: v0.7.0\n"
+        "    hooks:\n"
+        "      - id: check-all\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with (
+        patch("check_all._collect", return_value=[]),
+        patch("subprocess.run", return_value=ok),
+        patch("importlib.metadata.version", return_value="0.8.1"),
+        pytest.raises(SystemExit),
+    ):
+        main()
+    out = capsys.readouterr().out
+    assert "WARNING" in out
+    assert "pre-commit autoupdate" in out

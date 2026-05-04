@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.metadata
 import os
 import shutil
 import subprocess
@@ -350,6 +351,28 @@ def _build_abbrev_env(config: dict[str, object]) -> dict[str, str]:
     return abbrev_env
 
 
+def _warn_if_precommit_outdated(root: Path) -> None:
+    config_path = root / ".pre-commit-config.yaml"
+    if not config_path.exists():
+        return
+    try:
+        data = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+        for repo in data.get("repos", []):
+            if "lipex360x/dev-quality" not in str(repo.get("repo", "")):
+                continue
+            pinned = str(repo.get("rev", ""))
+            current = f"v{importlib.metadata.version('dev-quality')}"
+            if pinned != current:
+                print(
+                    f"WARNING: .pre-commit-config.yaml is pinned to {pinned} "
+                    f"but this tool is at {current}. "
+                    f"Run `pre-commit autoupdate` to sync.",
+                    flush=True,
+                )
+    except Exception:  # noqa: BLE001,S110  # nosec B110
+        pass
+
+
 def main() -> None:
     clear_cache = "--clear-cache" in sys.argv
     no_cache = "--no-cache" in sys.argv
@@ -364,6 +387,7 @@ def main() -> None:
 
     root = Path(args[0]).resolve() if args else Path.cwd()
     print(f"Scanning {root} ...", flush=True)
+    _warn_if_precommit_outdated(root)
 
     config = _load_config(root)
     skip = set(config.get("skip", []))  # type: ignore[call-overload]
