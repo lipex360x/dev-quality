@@ -53,7 +53,9 @@ Accept a project root. Run automatically by `check-all`.
 
 | Invocation | What it does |
 |---|---|
-| `check-all install-skill --target <dir>` | Copy `SKILL.md` to `<dir>/dev-quality/SKILL.md` |
+| `check-all install-skill --target <dir>` | Install `SKILL.md` to `<dir>/dev-quality/SKILL.md` and save the path |
+| `install-skill --target <dir>` | Same as above via the standalone command |
+| `install-skill` | Update in-place — uses the path saved during the last install (no `--target` needed) |
 
 ---
 

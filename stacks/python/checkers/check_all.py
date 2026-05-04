@@ -65,21 +65,10 @@ def _user_cache_dir() -> Path:
     return Path(tempfile.gettempdir()) / "dev-quality"
 
 
-def _do_install_skill(target: str) -> None:
-    sys.argv = ["install-skill", "--target", target]
-    _install_skill_main()
-
-
 def _handle_install_skill(args: list[str]) -> None:
-    remaining = args[1:]
-    if "--target" in remaining:
-        position = remaining.index("--target")
-        if position + 1 < len(remaining):
-            _do_install_skill(remaining[position + 1])
-            sys.exit(0)
-    print("Usage: check-all install-skill --target <skills-directory>")
-    print("Example: check-all install-skill --target ~/.claude/skills")
-    sys.exit(1)
+    sys.argv = ["install-skill"] + args[1:]
+    _install_skill_main()
+    sys.exit(0)
 
 
 def _do_clear_cache() -> None:

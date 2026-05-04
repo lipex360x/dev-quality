@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.12.0] — 2026-05-04
+
+### Added
+- `install-skill`: saves the installation path to `~/.config/dev-quality/skill_path` after every install. Subsequent runs without `--target` read the saved path and update in-place — no need to remember the target directory.
+- `check-all install-skill`: inherits the same behavior — `check-all install-skill` without `--target` uses the saved path.
+- `install-skill`: new `_config_file()`, `_save_skill_path()`, `_load_skill_path()`, `_resolve_target()` helpers; `main()` accepts optional `config_file` kwarg for testability.
+
+### Changed
+- `check_all`: removed `_do_install_skill()` — `_handle_install_skill()` now delegates directly to `install_skill.main()` by setting `sys.argv`.
+
+---
+
 ## [v0.11.0] — 2026-05-04
 
 ### Added

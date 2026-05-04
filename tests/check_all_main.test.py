@@ -725,18 +725,36 @@ def test_main_ruff_check_has_per_file_ignores_for_plr2004(
     assert any("PLR2004" in value for value in per_file_values)
 
 
-def test_install_skill_subcommand_calls_install(
+def test_install_skill_subcommand_calls_install_skill_main(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(sys, "argv", ["check-all", "install-skill", "--target", str(tmp_path)])
     with (
-        patch("check_all._do_install_skill") as mock_install,
+        patch("check_all._install_skill_main") as mock_install,
         pytest.raises(SystemExit) as raised,
     ):
         main()
-    mock_install.assert_called_once_with(str(tmp_path))
+    mock_install.assert_called_once()
     assert raised.value.code == 0
+
+
+def test_install_skill_subcommand_sets_argv_before_calling_main(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", "install-skill", "--target", str(tmp_path)])
+    captured_argv: list[list[str]] = []
+
+    def _capture() -> None:
+        captured_argv.append(list(sys.argv))
+
+    with (
+        patch("check_all._install_skill_main", side_effect=_capture),
+        pytest.raises(SystemExit),
+    ):
+        main()
+    assert captured_argv[0] == ["install-skill", "--target", str(tmp_path)]
 
 
 def test_install_skill_subcommand_exits_1_when_target_missing(
@@ -744,7 +762,10 @@ def test_install_skill_subcommand_exits_1_when_target_missing(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(sys, "argv", ["check-all", "install-skill"])
-    with pytest.raises(SystemExit) as raised:
+    with (
+        patch("install_skill._load_skill_path", return_value=None),
+        pytest.raises(SystemExit) as raised,
+    ):
         main()
     assert raised.value.code == 1
     assert "--target" in capsys.readouterr().out
@@ -761,11 +782,20 @@ def test_install_skill_subcommand_exits_1_when_target_flag_has_no_value(
     assert "--target" in capsys.readouterr().out
 
 
-def test_do_install_skill_writes_skill_md(tmp_path: Path) -> None:
-    from check_all import _do_install_skill
-
-    _do_install_skill(str(tmp_path))
-    assert (tmp_path / "dev-quality" / "SKILL.md").exists()
+def test_install_skill_subcommand_without_target_uses_saved_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", "install-skill"])
+    skills_dir = tmp_path / "skills"
+    with (
+        patch("install_skill._load_skill_path", return_value=skills_dir),
+        patch("check_all._install_skill_main") as mock_install,
+        pytest.raises(SystemExit) as raised,
+    ):
+        main()
+    mock_install.assert_called_once()
+    assert raised.value.code == 0
 
 
 def test_main_warns_when_precommit_rev_is_outdated(
