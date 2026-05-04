@@ -49,6 +49,7 @@ Central repository for code quality tooling across stacks. Houses custom checker
 | `vulture` | Dead code (unused functions, variables, imports) |
 | `bandit` | Security vulnerabilities |
 | `pylint C0103` | Variable and function naming conventions |
+| `check-duplicate` | Duplicate code blocks (pylint R0801) — production files only, ≥ 2 files required |
 | `semgrep` | Custom rules — runs automatically when `.semgrep/` or `semgrep.yml` exists at project root |
 
 ### Bash
@@ -361,7 +362,7 @@ Create a `.dev-quality.yaml` at the project root to customize `check-all` behavi
 
 | Key | Default | Description |
 |---|---|---|
-| `skip` | `[]` | Checkers to disable. Valid values: `check-abbrev`, `check-comments`, `check-noqa`, `check-size`, `check-complexity`, `check-bash-tests`, `check-bash-logs`, `ruff`, `mypy`, `vulture`, `bandit`, `pylint`, `shellcheck`, `semgrep` |
+| `skip` | `[]` | Checkers to disable. Valid values: `check-abbrev`, `check-comments`, `check-noqa`, `check-size`, `check-complexity`, `check-bash-tests`, `check-bash-logs`, `ruff`, `mypy`, `vulture`, `bandit`, `pylint`, `check-duplicate`, `shellcheck`, `semgrep` |
 | `line_length` | `120` | Maximum line length passed to ruff |
 | `max_complexity` | `6` | Maximum cyclomatic complexity for Bash functions |
 | `max_file_lines` | `800` | Maximum number of lines per file |
@@ -370,6 +371,7 @@ Create a `.dev-quality.yaml` at the project root to customize `check-all` behavi
 | `python_version` | `"3.11"` | Python version passed to mypy |
 | `abbrev_min_length` | `2` | Flag identifiers with this many characters or fewer (set to `0` to use denylist only) |
 | `abbrev_allowlist` | `[]` | Extra identifiers to allow in addition to the built-in defaults |
+| `min_duplicate_lines` | `6` | Minimum lines of similarity to flag as duplicate (Python only, `check-duplicate`) |
 
 ```yaml
 skip:

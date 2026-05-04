@@ -1,1 +1,2 @@
 max_func_lines: 120
+min_duplicate_lines: 20

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.14.0] — 2026-05-04
+
+### Added
+- `check-duplicate`: new checker using pylint R0801 to detect similar code blocks across production Python files. Test files are excluded. Runs only when ≥ 2 production files exist. Configurable via `min_duplicate_lines` in `.dev-quality.yaml` (default: `6`). Disable with `skip: [check-duplicate]`.
+
+---
+
 ## [v0.13.2] — 2026-05-04
 
 ### Changed

@@ -272,6 +272,110 @@ def test_main_python_version_passed_to_mypy(
     assert "3.12" in all_args
 
 
+def test_main_check_duplicate_r0801_called(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with (
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["a.py", "b.py"])),
+        patch("subprocess.run", return_value=ok) as mock_run,
+        pytest.raises(SystemExit),
+    ):
+        main()
+    all_args = [item for call in mock_run.call_args_list for item in call[0][0]]
+    assert any("R0801" in flag for flag in all_args)
+
+
+def test_main_check_duplicate_default_min_lines(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with (
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["a.py", "b.py"])),
+        patch("subprocess.run", return_value=ok) as mock_run,
+        pytest.raises(SystemExit),
+    ):
+        main()
+    all_args = [item for call in mock_run.call_args_list for item in call[0][0]]
+    assert "--min-similarity-lines=6" in all_args
+
+
+def test_main_check_duplicate_reads_config(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path, {"min_duplicate_lines": 10})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with (
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["a.py", "b.py"])),
+        patch("subprocess.run", return_value=ok) as mock_run,
+        pytest.raises(SystemExit),
+    ):
+        main()
+    all_args = [item for call in mock_run.call_args_list for item in call[0][0]]
+    assert "--min-similarity-lines=10" in all_args
+
+
+def test_main_skip_check_duplicate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path, {"skip": ["check-duplicate"]})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with (
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["a.py", "b.py"])),
+        patch("subprocess.run", return_value=ok) as mock_run,
+        pytest.raises(SystemExit),
+    ):
+        main()
+    all_args = [item for call in mock_run.call_args_list for item in call[0][0]]
+    assert not any("R0801" in flag for flag in all_args)
+
+
+def test_main_check_duplicate_excludes_test_files(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with (
+        patch(
+            "check_all._collect",
+            side_effect=_stub_collect(tmp_path, python_names=["src.py", "other.py", "tests/test_src.py"]),
+        ),
+        patch("subprocess.run", return_value=ok) as mock_run,
+        pytest.raises(SystemExit),
+    ):
+        main()
+    r0801_calls = [call[0][0] for call in mock_run.call_args_list if any("R0801" in flag for flag in call[0][0])]
+    assert r0801_calls
+    passed_paths = [flag for flag in r0801_calls[0] if str(tmp_path) in str(flag)]
+    assert len(passed_paths) == 2
+    assert all("test_src" not in path for path in passed_paths)
+
+
+def test_main_check_duplicate_skipped_with_fewer_than_2_prod_files(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with (
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["src.py"])),
+        patch("subprocess.run", return_value=ok) as mock_run,
+        pytest.raises(SystemExit),
+    ):
+        main()
+    all_args = [item for call in mock_run.call_args_list for item in call[0][0]]
+    assert not any("R0801" in flag for flag in all_args)
+
+
 def test_main_prints_scanning_message(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

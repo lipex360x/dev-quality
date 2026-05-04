@@ -55,6 +55,7 @@ In addition to shebangs, these are the only allowed comments in `.py` files:
 | Key | Default | Description |
 |---|---|---|
 | `python_version` | `"3.11"` | Target version passed to ruff and mypy |
+| `min_duplicate_lines` | `6` | Minimum lines of similarity to flag as duplicate (`check-duplicate`) |
 
 ---
 
@@ -76,6 +77,12 @@ No `Any` unless unavoidable. Prefer `object` for genuinely unknown types.
 - Always allowed short names: `i`, `j`, `k`, `_`, `id`, `ok`
 - Functions: `snake_case`, minimum 3 characters
 - Classes: `PascalCase`, minimum 3 characters
+
+---
+
+## Duplicate code (`check-duplicate`)
+
+Uses pylint R0801 to detect similar code blocks across production files. Test files are excluded. Runs only when ≥ 2 production files exist. Disable with `skip: [check-duplicate]`.
 
 ---
 

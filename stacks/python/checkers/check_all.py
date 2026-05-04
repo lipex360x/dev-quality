@@ -13,6 +13,7 @@ from install_skill import main as _install_skill_main
 
 _SKIP_DIRS = frozenset(["__pycache__", ".venv", ".git", "node_modules"])
 _TEST_DIRS = frozenset(["tests", "test"])
+_MIN_DUPLICATE_FILES = 2
 
 
 def _is_test_file(path: Path) -> bool:
@@ -208,6 +209,53 @@ def _run_custom_dir_checkers(
     return passed
 
 
+def _run_ruff(
+    py_files: list[Path],
+    skip: set[str],
+    ruff_cache: list[str],
+    line_length: str,
+    results: dict[str, tuple[bool, int]],
+) -> bool:
+    if "ruff" in skip:
+        return True
+    passed = True
+    findings: list[str] = []
+    ok = _run_on_files(
+        [
+            "ruff",
+            "check",
+            *ruff_cache,
+            "--line-length",
+            line_length,
+            "--select",
+            "E,F,I,UP,B,SIM,RET,C,S,N,PLR2004",
+            "--extend-ignore",
+            "S101,S603,S607",
+            "--per-file-ignores",
+            "tests/*.py:PLR2004",
+            "--per-file-ignores",
+            "test_*.py:PLR2004",
+            "--per-file-ignores",
+            "*_test.py:PLR2004",
+        ],
+        py_files,
+        findings,
+    )
+    _print_findings(findings)
+    results["ruff check"] = (ok, len(findings))
+    passed &= ok
+    findings = []
+    ok = _run_on_files(
+        ["ruff", "format", "--check", *ruff_cache, "--line-length", line_length],
+        py_files,
+        findings,
+    )
+    _print_findings(findings)
+    results["ruff format"] = (ok, len(findings))
+    passed &= ok
+    return passed
+
+
 def _run_py_checkers(
     py_files: list[Path],
     skip: set[str],
@@ -215,48 +263,12 @@ def _run_py_checkers(
     mypy_cache: list[str],
     line_length: str,
     python_version: str,
+    min_duplicate_lines: str,
     results: dict[str, tuple[bool, int]],
 ) -> bool:
-    passed = True
-    if "ruff" not in skip:
-        findings: list[str] = []
-        ok = _run_on_files(
-            [
-                "ruff",
-                "check",
-                *ruff_cache,
-                "--line-length",
-                line_length,
-                "--select",
-                "E,F,I,UP,B,SIM,RET,C,S,N,PLR2004",
-                "--extend-ignore",
-                "S101,S603,S607",
-                "--per-file-ignores",
-                "tests/*.py:PLR2004",
-                "--per-file-ignores",
-                "test_*.py:PLR2004",
-                "--per-file-ignores",
-                "*_test.py:PLR2004",
-            ],
-            py_files,
-            findings,
-        )
-        _print_findings(findings)
-        results["ruff check"] = (ok, len(findings))
-        passed &= ok
-
-        findings = []
-        ok = _run_on_files(
-            ["ruff", "format", "--check", *ruff_cache, "--line-length", line_length],
-            py_files,
-            findings,
-        )
-        _print_findings(findings)
-        results["ruff format"] = (ok, len(findings))
-        passed &= ok
-
+    passed = _run_ruff(py_files, skip, ruff_cache, line_length, results)
     if "mypy" not in skip:
-        findings = []
+        findings: list[str] = []
         mypy_files = [file_path for file_path in py_files if not _is_test_file(file_path)]
         ok = _run_on_files(
             [
@@ -296,7 +308,30 @@ def _run_py_checkers(
         results["pylint"] = (ok, len(findings))
         passed &= ok
 
+    passed &= _run_check_duplicate(py_files, skip, min_duplicate_lines, results)
     return passed
+
+
+def _run_check_duplicate(
+    py_files: list[Path],
+    skip: set[str],
+    min_duplicate_lines: str,
+    results: dict[str, tuple[bool, int]],
+) -> bool:
+    if "check-duplicate" in skip:
+        return True
+    prod_files = [file_path for file_path in py_files if not _is_test_file(file_path)]
+    if len(prod_files) < _MIN_DUPLICATE_FILES:
+        return True
+    findings: list[str] = []
+    ok = _run_on_files(
+        ["pylint", "--disable=all", "--enable=R0801", f"--min-similarity-lines={min_duplicate_lines}"],
+        prod_files,
+        findings,
+    )
+    _print_findings(findings)
+    results["check-duplicate"] = (ok, len(findings))
+    return ok
 
 
 def _run_sh_checkers(
@@ -397,6 +432,7 @@ def main() -> None:
     line_length = str(config.get("line_length", 120))
     max_complexity = str(config.get("max_complexity", 6))
     python_version = str(config.get("python_version", "3.11"))
+    min_duplicate_lines = str(config.get("min_duplicate_lines", 6))
 
     if no_cache:
         ruff_cache: list[str] = ["--no-cache"]
@@ -419,7 +455,9 @@ def main() -> None:
     passed = _run_custom_file_checkers(all_files, skip, size_env, complexity_env, abbrev_env, results)
     passed &= _run_custom_dir_checkers(root, skip, results)
     if py_files:
-        passed &= _run_py_checkers(py_files, skip, ruff_cache, mypy_cache, line_length, python_version, results)
+        passed &= _run_py_checkers(
+            py_files, skip, ruff_cache, mypy_cache, line_length, python_version, min_duplicate_lines, results
+        )
     passed &= _run_sh_checkers(sh_files, skip, results)
     passed &= _run_semgrep(root, skip, results)
 
