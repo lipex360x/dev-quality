@@ -49,6 +49,12 @@ No `Any` unless unavoidable. Prefer `object` for genuinely unknown types.
 
 ---
 
+## Semgrep
+
+Runs automatically when the project has `.semgrep/` (directory with `.yml`/`.yaml` rules) or `semgrep.yml`/`semgrep.yaml` at the root. Silently skipped when neither exists or semgrep is not installed. Disable with `skip: [semgrep]` in `.dev-quality.yaml`.
+
+---
+
 ## Python self-audit
 
 In addition to the Core self-audit (`SKILL.md`):
