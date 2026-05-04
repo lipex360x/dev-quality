@@ -200,7 +200,6 @@ max_test_file_lines: 2000
 max_func_lines: 120
 max_complexity: 8
 line_length: 120
-python_version: "3.12"
 abbrev_min_length: 3
 abbrev_allowlist:
   - ok

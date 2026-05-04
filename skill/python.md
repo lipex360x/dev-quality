@@ -28,6 +28,14 @@ Applies to `.py` files only. General rules (TDD, abbreviations, comments, size l
 
 ---
 
+## Python config keys (`.dev-quality.yaml`)
+
+| Key | Default | Description |
+|---|---|---|
+| `python_version` | `"3.11"` | Target version passed to ruff and mypy |
+
+---
+
 ## mypy — strict mode
 
 Every function needs complete type annotations:
