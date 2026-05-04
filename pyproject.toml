@@ -18,6 +18,7 @@ packages = ["dev_quality_skill"]
 
 [tool.setuptools.package-dir]
 "" = "stacks/python/checkers"
+"dev_quality_skill" = "skill"
 
 [tool.setuptools.package-data]
 dev_quality_skill = ["*.md"]

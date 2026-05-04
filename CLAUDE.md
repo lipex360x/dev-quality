@@ -124,7 +124,7 @@ Never use manual `git tag` / `git push` / `gh release create` — always use the
 
 **On every behavior-changing commit:**
 1. `CHANGELOG.md` → add entry under the new version (this sets the version)
-2. `stacks/python/checkers/dev_quality_skill/SKILL.md` → reflect any new or changed rule. The skill is layered (see below) — update the right layer:
+2. `skill/SKILL.md` (Core) and the relevant language file (`skill/python.md`, `skill/bash.md`, ...) — update the right layer:
    - **Core layer** (top of the file, language-agnostic) for changes to: TDD, abbreviations, comments, size limits, `.dev-quality.yaml`, self-audit, install/update flow, commands. These rules apply to every language.
    - **Language layer** (`## Python`, `## Bash`, `## TypeScript`, `## Java`, ...) for changes that only apply to one language: linter rules, type-checker conventions, naming patterns, language-specific tooling.
    - **Adding a new language** → add a new top-level section at the bottom of the file. Do not duplicate Core rules in the language section — the language section only carries what is genuinely specific.

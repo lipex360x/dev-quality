@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.13.1] — 2026-05-04
+
+### Changed
+- `skill/` directory moved from `stacks/python/checkers/dev_quality_skill/` to the project root — the skill is language-agnostic and should not live inside the Python stack. Package name (`dev_quality_skill`) and all runtime behaviour are unchanged.
+
+---
+
 ## [v0.13.0] — 2026-05-04
 
 ### Changed
