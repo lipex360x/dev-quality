@@ -25,7 +25,7 @@ Individual file checkers (accept one or more file paths):
 |---|---|
 | `check-abbrev <files>` | Abbreviations in identifiers (denylist + short-name detection) |
 | `check-comments <files>` | Inline and block comments |
-| `check-noqa <files>` | Inline `# noqa` and `# nosec` annotations |
+| `check-noqa <files>` | Inline `# noqa` and `# nosec` annotations (Python only) |
 | `check-size <files>` | File and function line limits |
 | `check-complexity <files>` | Cyclomatic complexity of Bash functions |
 
@@ -147,13 +147,13 @@ Never use these as identifiers:
 
 ### Allowlist (always permitted regardless of length)
 
-`self`, `cls`, `args`, `kwargs`, `i`, `j`, `k`, `_`, `id`, `ok`
+`i`, `j`, `k`, `_`, `id`, `ok`
 
 - `i`, `j`, `k` — numeric loop counters only, not abbreviations for the item being iterated.
 - `id` — database/object identifier convention.
 - `ok` — a complete word, not an abbreviation.
 
-In Bash only, `dest` is also allowed.
+For language-specific allowlist additions, see `./python.md` or `./bash.md`.
 
 ### Loop variables
 
@@ -174,17 +174,13 @@ done
 
 ## Comments
 
-No comments in source files. The only exceptions:
+No comments in source files. The only universal exception:
 
 | Allowed | Example |
 |---------|---------|
 | Shebang | `#!/usr/bin/env bash` |
-| Shellcheck directives | `# shellcheck source=/dev/null` |
-| Type-checker suppressions | `# type: ignore[attr-defined]` |
-| Coverage exclusions | `# pragma: no cover` |
-| PEP 723 script blocks | `# /// script` … `# ///` |
 
-**`# noqa` and `# nosec` are not allowed inline.** If a linter rule fires on unavoidable code, add it to `per-file-ignores` in the project's config file instead.
+For language-specific comment exceptions, see `./python.md` or `./bash.md`.
 
 If you feel like writing a comment, rename the variable or extract a function instead.
 

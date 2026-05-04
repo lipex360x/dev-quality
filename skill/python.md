@@ -28,6 +28,28 @@ Applies to `.py` files only. General rules (TDD, abbreviations, comments, size l
 
 ---
 
+## Abbreviation allowlist (Python additions)
+
+In addition to the core allowlist (`SKILL.md`), these are always permitted in Python:
+
+`self`, `cls`, `args`, `kwargs`
+
+---
+
+## Comment exceptions (Python)
+
+In addition to shebangs, these are the only allowed comments in `.py` files:
+
+| Allowed | Example |
+|---------|---------|
+| Type-checker suppressions | `# type: ignore[attr-defined]` |
+| Coverage exclusions | `# pragma: no cover` |
+| PEP 723 script blocks | `# /// script` … `# ///` |
+
+**`# noqa` and `# nosec` are not allowed inline.** If a linter rule fires on unavoidable code, add it to `per-file-ignores` in `pyproject.toml` instead.
+
+---
+
 ## Python config keys (`.dev-quality.yaml`)
 
 | Key | Default | Description |

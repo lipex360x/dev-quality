@@ -4,6 +4,24 @@ Applies to `.sh` files only. General rules (TDD, abbreviations, comments, size l
 
 ---
 
+## Abbreviation allowlist (Bash additions)
+
+In addition to the core allowlist (`SKILL.md`), these are always permitted in Bash:
+
+`dest`
+
+---
+
+## Comment exceptions (Bash)
+
+In addition to shebangs, these are the only allowed comments in `.sh` files:
+
+| Allowed | Example |
+|---------|---------|
+| Shellcheck directives | `# shellcheck source=/dev/null` |
+
+---
+
 ## Complexity
 
 Maximum cyclomatic complexity per function: **6** (default; override with `max_complexity` in `.dev-quality.yaml`).
