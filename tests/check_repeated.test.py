@@ -343,6 +343,55 @@ def test_function_signature_not_flagged(tmp_path: Path) -> None:
     assert check_file(path) == []
 
 
+def test_false_literal_rhs_not_flagged(tmp_path: Path) -> None:
+    line = "block_has_references_marker = False"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_true_literal_rhs_not_flagged(tmp_path: Path) -> None:
+    line = "block_has_references_marker = True"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_none_literal_rhs_not_flagged(tmp_path: Path) -> None:
+    line = "current_state_marker_value = None"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_integer_literal_rhs_not_flagged(tmp_path: Path) -> None:
+    line = "current_iteration_counter = 0"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_negative_integer_literal_rhs_not_flagged(tmp_path: Path) -> None:
+    line = "current_signed_offset_value = -1"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_float_literal_rhs_not_flagged(tmp_path: Path) -> None:
+    line = "current_ratio_threshold = 0.75"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_string_literal_still_flagged(tmp_path: Path) -> None:
+    line = 'shared_api_prefix = "https://api.example.com/v1"'
+    content = (line + "\n") * 3
+    path = write_py(tmp_path, content)
+    assert len(check_file(path)) == 1
+
+
 def test_main_no_args_exits_0(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sys, "argv", ["check_repeated.py"])
     with pytest.raises(SystemExit) as raised:

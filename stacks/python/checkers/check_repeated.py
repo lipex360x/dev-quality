@@ -16,6 +16,7 @@ _TRIVIAL_RE = re.compile(
 )
 
 _VALUE_ASSIGN_RE = re.compile(r"^([a-zA-Z_]\w*)\s*=\s*([^=].*)$")
+_PRIMITIVE_LITERAL_RE = re.compile(r"^(True|False|None|-?\d+(\.\d+)?)$")
 
 
 def _get_max_repetitions() -> int:
@@ -56,7 +57,9 @@ def _is_value_assignment(stripped: str) -> bool:
     match = _VALUE_ASSIGN_RE.match(stripped)
     if not match:
         return False
-    rhs = match.group(2)
+    rhs = match.group(2).strip()
+    if _PRIMITIVE_LITERAL_RE.match(rhs):
+        return False
     return not any(char in rhs for char in "([{")
 
 

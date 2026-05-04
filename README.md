@@ -307,6 +307,7 @@ def setup_readme():
 | Object construction | `mock = MagicMock(...)` | New object per call |
 | Annotated assignments | `count: int = 5` | Likely declaration, not derivation |
 | Trailing-comma lines | `value = X,` | Function arguments / multi-line calls |
+| Primitive literal RHS | `flag = False`, `count = 0`, `state = None` | State resets, not derivations |
 | Non-assignments | `assert ...`, `if ...`, function defs | Not a value derivation |
 
 The trade-off is conservative — false negatives are preferred over false positives. For cross-file duplicate detection (production code), use `check-duplicate` (pylint R0801).

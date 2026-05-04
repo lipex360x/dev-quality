@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.15.2] — 2026-05-04
+
+### Changed
+- `check-repeated`: now skips assignments whose RHS is a **primitive literal** (`True`, `False`, `None`, integers, floats — including negatives). Eliminates false positives where the same flag is reset multiple times inside a state machine (e.g., `block_has_refs = False` × 3 within one function). String literal RHS (`API_PREFIX = "https://..."`) remains flagged — strings are still candidates for extraction as module-level constants.
+
+---
+
 ## [v0.15.1] — 2026-05-04
 
 ### Changed
