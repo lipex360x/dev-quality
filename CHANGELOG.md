@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.15.0] — 2026-05-04
+
+### Added
+- `check-repeated`: new checker for intra-file line repetition. Detects non-trivial lines repeated more than `max_line_repetitions` times within a single file (Python and Bash). Trivial lines (`pass`, `return None`, closing brackets, decorators, comments, docstring content, etc.) are filtered before counting. Config keys in `.dev-quality.yaml`: `max_line_repetitions` (default: `2`) and `min_line_length` (default: `20`). Disable with `skip: [check-repeated]`.
+- `.dev-quality.yaml`: `max_line_repetitions: 55` set for this repo. `check_all.py` has 11+ identical boilerplate lines per checker function (architectural constraint — orchestrator can't extract across standalone checkers), and the 1000-line `check_all_main.test.py` has 50+ test functions each with the same fixture setup. Same pattern as `min_duplicate_lines: 20` for `check-duplicate`.
+
+---
+
 ## [v0.14.0] — 2026-05-04
 
 ### Added

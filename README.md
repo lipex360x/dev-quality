@@ -36,6 +36,7 @@ Central repository for code quality tooling across stacks. Houses custom checker
 |---|---|
 | `check-abbrev` | Banned abbreviations (`buf`, `cfg`, `ref`, `tmp`, etc.) |
 | `check-comments` | Inline and block comments (except shebangs, `# shellcheck`, `# noqa`, `# type: ignore`, PEP 723 blocks) |
+| `check-repeated` | Non-trivial lines repeated more than `max_line_repetitions` times within a single file |
 | `check-size` | Files over 800 lines or functions over 80 lines |
 
 ### Python
@@ -362,7 +363,7 @@ Create a `.dev-quality.yaml` at the project root to customize `check-all` behavi
 
 | Key | Default | Description |
 |---|---|---|
-| `skip` | `[]` | Checkers to disable. Valid values: `check-abbrev`, `check-comments`, `check-noqa`, `check-size`, `check-complexity`, `check-bash-tests`, `check-bash-logs`, `ruff`, `mypy`, `vulture`, `bandit`, `pylint`, `check-duplicate`, `shellcheck`, `semgrep` |
+| `skip` | `[]` | Checkers to disable. Valid values: `check-abbrev`, `check-comments`, `check-noqa`, `check-repeated`, `check-size`, `check-complexity`, `check-bash-tests`, `check-bash-logs`, `ruff`, `mypy`, `vulture`, `bandit`, `pylint`, `check-duplicate`, `shellcheck`, `semgrep` |
 | `line_length` | `120` | Maximum line length passed to ruff |
 | `max_complexity` | `6` | Maximum cyclomatic complexity for Bash functions |
 | `max_file_lines` | `800` | Maximum number of lines per file |
@@ -372,6 +373,8 @@ Create a `.dev-quality.yaml` at the project root to customize `check-all` behavi
 | `abbrev_min_length` | `2` | Flag identifiers with this many characters or fewer (set to `0` to use denylist only) |
 | `abbrev_allowlist` | `[]` | Extra identifiers to allow in addition to the built-in defaults |
 | `min_duplicate_lines` | `6` | Minimum lines of similarity to flag as duplicate (Python only, `check-duplicate`) |
+| `max_line_repetitions` | `2` | A non-trivial line may appear at most this many times in a single file (`check-repeated`) |
+| `min_line_length` | `20` | Lines shorter than this are ignored by `check-repeated` |
 
 ```yaml
 skip:

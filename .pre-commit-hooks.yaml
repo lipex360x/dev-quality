@@ -26,6 +26,13 @@
   language: python
   types: [python]
 
+- id: check-repeated
+  name: Check repeated lines
+  description: Flags non-trivial lines repeated too many times within a single file
+  entry: check-repeated
+  language: python
+  types_or: [python, shell]
+
 - id: check-size
   name: Check file and function size
   description: Flags files and functions that exceed line-length limits

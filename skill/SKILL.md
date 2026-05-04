@@ -26,6 +26,7 @@ Individual file checkers (accept one or more file paths):
 | `check-abbrev <files>` | Abbreviations in identifiers (denylist + short-name detection) |
 | `check-comments <files>` | Inline and block comments |
 | `check-noqa <files>` | Inline `# noqa` and `# nosec` annotations (Python only) |
+| `check-repeated <files>` | Non-trivial lines repeated more than `max_line_repetitions` times within a file |
 | `check-size <files>` | File and function line limits |
 | `check-complexity <files>` | Cyclomatic complexity of Bash functions |
 

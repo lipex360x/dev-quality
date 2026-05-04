@@ -933,3 +933,83 @@ def test_main_warns_when_precommit_rev_is_outdated(
     assert warning_positions
     assert summary_positions
     assert warning_positions[-1] > summary_positions[-1]
+
+
+def test_main_check_repeated_called(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with (
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
+        patch("subprocess.run", return_value=ok) as mock_run,
+        pytest.raises(SystemExit),
+    ):
+        main()
+    called_commands = [call[0][0] for call in mock_run.call_args_list]
+    assert any("check-repeated" in command for command in called_commands)
+
+
+def test_main_check_repeated_default_env(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    environments_seen: list[dict[str, str]] = []
+
+    def capture_run(command: list[str], **kwargs: object) -> MagicMock:
+        if kwargs.get("env"):
+            environments_seen.append(dict(kwargs["env"]))  # type: ignore[call-overload]
+        return ok
+
+    with (
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
+        patch("subprocess.run", side_effect=capture_run),
+        pytest.raises(SystemExit),
+    ):
+        main()
+    assert any(environ.get("CHECK_REPEATED_MAX_REPETITIONS") == "2" for environ in environments_seen)
+    assert any(environ.get("CHECK_REPEATED_MIN_LINE_LENGTH") == "20" for environ in environments_seen)
+
+
+def test_main_check_repeated_reads_config(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path, {"max_line_repetitions": 5, "min_line_length": 30})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    environments_seen: list[dict[str, str]] = []
+
+    def capture_run(command: list[str], **kwargs: object) -> MagicMock:
+        if kwargs.get("env"):
+            environments_seen.append(dict(kwargs["env"]))  # type: ignore[call-overload]
+        return ok
+
+    with (
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
+        patch("subprocess.run", side_effect=capture_run),
+        pytest.raises(SystemExit),
+    ):
+        main()
+    assert any(environ.get("CHECK_REPEATED_MAX_REPETITIONS") == "5" for environ in environments_seen)
+    assert any(environ.get("CHECK_REPEATED_MIN_LINE_LENGTH") == "30" for environ in environments_seen)
+
+
+def test_main_skip_check_repeated(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path, {"skip": ["check-repeated"]})
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with (
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
+        patch("subprocess.run", return_value=ok) as mock_run,
+        pytest.raises(SystemExit),
+    ):
+        main()
+    called_commands = [call[0][0] for call in mock_run.call_args_list]
+    assert not any("check-repeated" in command for command in called_commands)

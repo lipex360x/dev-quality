@@ -11,6 +11,7 @@ py-modules = [
     "check_comments",
     "check_complexity",
     "check_noqa",
+    "check_repeated",
     "check_size",
     "install_skill",
 ]
@@ -45,6 +46,7 @@ check-bash-tests = "check_bash_tests:main"
 check-comments = "check_comments:main"
 check-complexity = "check_complexity:main"
 check-noqa = "check_noqa:main"
+check-repeated = "check_repeated:main"
 check-size = "check_size:main"
 install-skill = "install_skill:main"
 

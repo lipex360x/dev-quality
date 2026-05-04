@@ -30,6 +30,7 @@ _CUSTOM_FILE_CHECKERS = [
     "check-abbrev",
     "check-comments",
     "check-noqa",
+    "check-repeated",
     "check-size",
     "check-complexity",
 ]
@@ -168,24 +169,15 @@ def _print_cache_hint(cache_dir: Path) -> None:
 def _run_custom_file_checkers(
     all_files: list[Path],
     skip: set[str],
-    size_env: dict[str, str],
-    complexity_env: dict[str, str],
-    abbrev_env: dict[str, str],
+    checker_envs: dict[str, dict[str, str]],
     results: dict[str, tuple[bool, int]],
 ) -> bool:
     passed = True
     for checker in _CUSTOM_FILE_CHECKERS:
         if checker in skip:
             continue
-        extra_env: dict[str, str] | None = None
-        if checker == "check-size":
-            extra_env = size_env
-        elif checker == "check-complexity":
-            extra_env = complexity_env
-        elif checker == "check-abbrev":
-            extra_env = abbrev_env
         findings: list[str] = []
-        ok = _run_on_files([checker], all_files, findings, extra_env)
+        ok = _run_on_files([checker], all_files, findings, checker_envs.get(checker))
         _print_findings(findings)
         results[checker] = (ok, len(findings))
         passed &= ok
@@ -380,6 +372,13 @@ def _build_abbrev_env(config: dict[str, object]) -> dict[str, str]:
     return abbrev_env
 
 
+def _build_repeated_env(config: dict[str, object]) -> dict[str, str]:
+    return {
+        "CHECK_REPEATED_MAX_REPETITIONS": str(config.get("max_line_repetitions", 2)),
+        "CHECK_REPEATED_MIN_LINE_LENGTH": str(config.get("min_line_length", 20)),
+    }
+
+
 def _print_footer(outdated_warning: str | None, cache_dir: Path | None) -> None:
     if outdated_warning:
         print(outdated_warning, flush=True)
@@ -451,8 +450,15 @@ def main() -> None:
     size_env = _build_size_env(config)
     complexity_env = {"CHECK_COMPLEXITY_MAX": max_complexity}
     abbrev_env = _build_abbrev_env(config)
+    repeated_env = _build_repeated_env(config)
+    checker_envs: dict[str, dict[str, str]] = {
+        "check-size": size_env,
+        "check-complexity": complexity_env,
+        "check-abbrev": abbrev_env,
+        "check-repeated": repeated_env,
+    }
 
-    passed = _run_custom_file_checkers(all_files, skip, size_env, complexity_env, abbrev_env, results)
+    passed = _run_custom_file_checkers(all_files, skip, checker_envs, results)
     passed &= _run_custom_dir_checkers(root, skip, results)
     if py_files:
         passed &= _run_py_checkers(
