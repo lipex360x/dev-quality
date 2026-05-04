@@ -63,6 +63,7 @@ def _update_readme_version(root: Path, version: str) -> bool:
         rf"\g<1>v{version}\2",
         text,
     )
+    updated = re.sub(r"(rev:\s*)v[\d.]+", rf"\g<1>v{version}", updated)
     if updated == text:
         return False
     readme.write_text(updated, encoding="utf-8")

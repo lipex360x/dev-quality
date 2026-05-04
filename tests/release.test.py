@@ -58,6 +58,14 @@ _README_WITH_CURRENT_BADGE = (
     "(https://github.com/lipex360x/dev-quality/releases)\n"
 )
 _README_WITHOUT_BADGE = "# dev-quality\n\nNo badge here.\n"
+_README_WITH_REV_EXAMPLES = (
+    "[![Version](https://img.shields.io/badge/version-v0.5.0-blue)]"
+    "(https://github.com/lipex360x/dev-quality/releases)\n\n"
+    "```yaml\nrepos:\n  - repo: https://github.com/lipex360x/dev-quality\n"
+    "    rev: v0.5.0\n    hooks:\n      - id: check-all\n```\n\n"
+    "```yaml\nrepos:\n  - repo: https://github.com/lipex360x/dev-quality\n"
+    "    rev: v0.4.0\n    hooks:\n      - id: check-abbrev\n```\n"
+)
 
 
 def test_read_version_from_changelog_returns_top_version(tmp_path: Path) -> None:
@@ -146,6 +154,31 @@ def test_update_readme_version_no_op_when_badge_absent(tmp_path: Path) -> None:
     (tmp_path / "README.md").write_text(_README_WITHOUT_BADGE, encoding="utf-8")
     _update_readme_version(tmp_path, "1.2.3")
     assert (tmp_path / "README.md").read_text(encoding="utf-8") == _README_WITHOUT_BADGE
+
+
+def test_update_readme_version_rewrites_rev_examples(tmp_path: Path) -> None:
+    (tmp_path / "README.md").write_text(_README_WITH_REV_EXAMPLES, encoding="utf-8")
+    _update_readme_version(tmp_path, "1.2.3")
+    content = (tmp_path / "README.md").read_text(encoding="utf-8")
+    assert content.count("rev: v1.2.3") == 2
+
+
+def test_update_readme_version_removes_old_rev_versions(tmp_path: Path) -> None:
+    (tmp_path / "README.md").write_text(_README_WITH_REV_EXAMPLES, encoding="utf-8")
+    _update_readme_version(tmp_path, "1.2.3")
+    content = (tmp_path / "README.md").read_text(encoding="utf-8")
+    assert "rev: v0.5.0" not in content
+    assert "rev: v0.4.0" not in content
+
+
+def test_update_readme_version_returns_true_when_only_rev_changed(tmp_path: Path) -> None:
+    readme_only_rev = (
+        "# dev-quality\n\n"
+        "```yaml\nrepos:\n  - repo: https://github.com/lipex360x/dev-quality\n"
+        "    rev: v0.5.0\n```\n"
+    )
+    (tmp_path / "README.md").write_text(readme_only_rev, encoding="utf-8")
+    assert _update_readme_version(tmp_path, "1.2.3") is True
 
 
 def test_commit_version_bump_stages_pyproject_and_readme(tmp_path: Path) -> None:

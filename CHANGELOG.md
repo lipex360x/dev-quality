@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.7.1] — 2026-05-04
+
+### Fixed
+- `check_all`: mypy no longer scans test files (`tests/`, `test_*.py`, `*_test.py`, `conftest.py`) — avoids false `[untyped-decorator]` failures in isolated environments where pytest is not installed
+
+---
+
 ## [v0.7.0] — 2026-05-01
 
 ### Changed
