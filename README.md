@@ -311,6 +311,13 @@ def setup_readme():
 
 The trade-off is conservative — false negatives are preferred over false positives. For cross-file duplicate detection (production code), use `check-duplicate` (pylint R0801).
 
+**To disable this checker** — add to `.dev-quality.yaml` at the project root:
+
+```yaml
+skip:
+  - check-repeated
+```
+
 <div align="right"><a href="#dev-quality">↑ Back to top</a></div>
 
 ---
