@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.15.1] — 2026-05-04
+
+### Changed
+- `check-repeated`: scope narrowed to **value-derivation assignments only**. Now flags only lines matching `<identifier> = <expr>` where the RHS contains no function calls, subscripts, or container literals (no `(`, `[`, `{`), and the line does not end with `,`. This eliminates false positives from test boilerplate (`monkeypatch: pytest.MonkeyPatch,`), object construction (`mock = MagicMock(...)`), helper calls (`path = write_py(...)`), assertions (`assert ...`), and orchestrator patterns (`findings: list[str] = []`). Default `max_line_repetitions: 2` now usable on real codebases.
+- `.dev-quality.yaml`: override reduced from `55` to `20`. Remaining repetitions are legitimate findings — repeated `tmp_path / "literal"` patterns across test functions that should be extracted to pytest fixtures. Tracked as TODO; not part of v0.15.1 scope.
+
+### Documented
+- Known limitation: `check-repeated` does not flag repeated function calls (`data = parse_config()` × 3) since string matching cannot infer purity. For cross-file duplicates, use `check-duplicate` (R0801).
+
+---
+
 ## [v0.15.0] — 2026-05-04
 
 ### Added

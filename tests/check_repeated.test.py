@@ -252,6 +252,97 @@ def test_smoke_setup_py(tmp_path: Path) -> None:
     assert 'gitignore = project / ".gitignore"' in findings[0]
 
 
+def test_function_call_rhs_not_flagged(tmp_path: Path) -> None:
+    line = "config_path = load_config_file(default_path, encoding)"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_constructor_rhs_not_flagged(tmp_path: Path) -> None:
+    line = "mock_response = MagicMock(returncode=0, stdout='')"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_subscript_rhs_not_flagged(tmp_path: Path) -> None:
+    line = "config_value = settings_dictionary['some_key']"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_list_literal_rhs_not_flagged(tmp_path: Path) -> None:
+    line = "expected_items = [1, 2, 3, 4, 5, 6, 7]"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_dict_literal_rhs_not_flagged(tmp_path: Path) -> None:
+    line = "headers_map = {'Content-Type': 'application/json'}"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_typed_assignment_not_flagged(tmp_path: Path) -> None:
+    line = "counter_total: int = 42 * 100 * 7"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_assert_statement_not_flagged(tmp_path: Path) -> None:
+    line = "assert process_input(value) == expected_result"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_function_param_with_comma_not_flagged(tmp_path: Path) -> None:
+    line = "default_argument = SOME_LONG_CONSTANT_NAME,"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_attribute_chain_assignment_flagged(tmp_path: Path) -> None:
+    line = "database_url = settings.database.connection_url"
+    content = (line + "\n") * 3
+    path = write_py(tmp_path, content)
+    assert len(check_file(path)) == 1
+
+
+def test_arithmetic_assignment_flagged(tmp_path: Path) -> None:
+    line = "total_seconds = base_seconds + extra_offset"
+    content = (line + "\n") * 3
+    path = write_py(tmp_path, content)
+    assert len(check_file(path)) == 1
+
+
+def test_string_literal_assignment_flagged(tmp_path: Path) -> None:
+    line = 'API_PREFIX = "https://api.example.com/v1"'
+    content = (line + "\n") * 3
+    path = write_py(tmp_path, content)
+    assert len(check_file(path)) == 1
+
+
+def test_method_chain_not_flagged(tmp_path: Path) -> None:
+    line = "result_text = base_string.strip().lower()"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
+def test_function_signature_not_flagged(tmp_path: Path) -> None:
+    line = "def setup_helper_function() -> None:"
+    content = (line + "\n") * 5
+    path = write_py(tmp_path, content)
+    assert check_file(path) == []
+
+
 def test_main_no_args_exits_0(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sys, "argv", ["check_repeated.py"])
     with pytest.raises(SystemExit) as raised:

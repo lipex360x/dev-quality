@@ -15,6 +15,8 @@ _TRIVIAL_RE = re.compile(
     r"|^(done|fi|esac)$"
 )
 
+_VALUE_ASSIGN_RE = re.compile(r"^([a-zA-Z_]\w*)\s*=\s*([^=].*)$")
+
 
 def _get_max_repetitions() -> int:
     return int(os.environ.get("CHECK_REPEATED_MAX_REPETITIONS", "2"))
@@ -48,6 +50,16 @@ def _collect_docstring_lines(lines: list[str]) -> frozenset[int]:
     return frozenset(result)
 
 
+def _is_value_assignment(stripped: str) -> bool:
+    if stripped.endswith(","):
+        return False
+    match = _VALUE_ASSIGN_RE.match(stripped)
+    if not match:
+        return False
+    rhs = match.group(2)
+    return not any(char in rhs for char in "([{")
+
+
 def _should_skip(stripped: str, min_len: int) -> bool:
     if not stripped:
         return True
@@ -55,7 +67,9 @@ def _should_skip(stripped: str, min_len: int) -> bool:
         return True
     if stripped.startswith(("#", "@")):
         return True
-    return bool(_TRIVIAL_RE.match(stripped))
+    if _TRIVIAL_RE.match(stripped):
+        return True
+    return not _is_value_assignment(stripped)
 
 
 def _count_occurrences(lines: list[str], docstring_lines: frozenset[int], min_len: int) -> dict[str, list[int]]:

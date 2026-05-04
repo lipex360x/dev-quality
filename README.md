@@ -36,7 +36,7 @@ Central repository for code quality tooling across stacks. Houses custom checker
 |---|---|
 | `check-abbrev` | Banned abbreviations (`buf`, `cfg`, `ref`, `tmp`, etc.) |
 | `check-comments` | Inline and block comments (except shebangs, `# shellcheck`, `# noqa`, `# type: ignore`, PEP 723 blocks) |
-| `check-repeated` | Non-trivial lines repeated more than `max_line_repetitions` times within a single file |
+| `check-repeated` | Same value-derivation assignment (`name = pure_expr`) repeated more than `max_line_repetitions` times in a file (e.g., `gitignore = project / ".gitignore"` × 3). Skips function calls, subscripts, container literals, and annotated assignments to keep noise low |
 | `check-size` | Files over 800 lines or functions over 80 lines |
 
 ### Python
@@ -273,6 +273,43 @@ To disable length-based checking entirely (denylist only):
 # .dev-quality.yaml
 abbrev_min_length: 0
 ```
+
+<div align="right"><a href="#dev-quality">↑ Back to top</a></div>
+
+---
+
+## check-repeated — scope and limitations
+
+`check-repeated` deliberately targets a narrow class of duplication: **the same value-derivation assignment computed N+ times in the same file**. It is meant to catch obvious refactoring opportunities like:
+
+```python
+# setup.py — flagged
+def setup_gitignore():
+    gitignore = project / ".gitignore"  # ← line 1
+    gitignore.write_text("__pycache__\n")
+
+def setup_editorconfig():
+    gitignore = project / ".gitignore"  # ← line 2
+    gitignore.unlink(missing_ok=True)
+
+def setup_readme():
+    gitignore = project / ".gitignore"  # ← line 3, flagged: extract module-level constant
+    gitignore.touch()
+```
+
+**What it skips (intentional false negatives):**
+
+| Pattern | Example | Why |
+|---|---|---|
+| Function calls | `data = parse_config()` | Cannot infer purity from text |
+| Subscripts | `value = config["key"]` | Often legitimate per-call lookup |
+| Container literals | `findings = []`, `headers = {}` | Each instance is a fresh local |
+| Object construction | `mock = MagicMock(...)` | New object per call |
+| Annotated assignments | `count: int = 5` | Likely declaration, not derivation |
+| Trailing-comma lines | `value = X,` | Function arguments / multi-line calls |
+| Non-assignments | `assert ...`, `if ...`, function defs | Not a value derivation |
+
+The trade-off is conservative — false negatives are preferred over false positives. For cross-file duplicate detection (production code), use `check-duplicate` (pylint R0801).
 
 <div align="right"><a href="#dev-quality">↑ Back to top</a></div>
 
