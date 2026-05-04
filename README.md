@@ -36,7 +36,7 @@ Central repository for code quality tooling across stacks. Houses custom checker
 |---|---|
 | `check-abbrev` | Banned abbreviations (`buf`, `cfg`, `ref`, `tmp`, etc.) |
 | `check-comments` | Inline and block comments (except shebangs, `# shellcheck`, `# noqa`, `# type: ignore`, PEP 723 blocks) |
-| `check-repeated` | Same value-derivation assignment (`name = pure_expr`) repeated more than `max_line_repetitions` times in a file (e.g., `gitignore = project / ".gitignore"` × 3). Skips function calls, subscripts, container literals, and annotated assignments to keep noise low |
+| `check-repeated` | Same value-derivation assignment (`name = pure_expr`) repeated more than `max_line_repetitions` times in a file (e.g., `gitignore = project / ".gitignore"` × 3). Skips function calls, subscripts, container literals, annotated assignments, and primitive literal RHS (`flag = False`, `count = 0`) to keep noise low |
 | `check-size` | Files over 800 lines or functions over 80 lines |
 
 ### Python
@@ -328,7 +328,7 @@ skip:
 - **`.gitignore` respected** — file collection uses `git ls-files` when the target is a git repository, so ignored files and directories are never checked. Falls back to recursive scan when outside a git repo.
 - **Progress as it runs** — each checker prints findings immediately; a `Scanning ...` message appears at start so the terminal is never silent.
 - **No side effects** — caches go to the system temp directory, never to the target project.
-- **Summary at the end** — per-checker status table followed by cache location and management options:
+- **Summary at the end** — per-checker status table followed by the running version, cache location, and management options:
 
 ```
 ──────────────────────────────────────
@@ -340,6 +340,7 @@ skip:
 ──────────────────────────────────────
  Result             FAIL   27 issues
 ──────────────────────────────────────
+Version: v0.15.3
 Cache: /tmp/dev-quality
   To clear:   check-all --clear-cache
   To disable: check-all --no-cache .

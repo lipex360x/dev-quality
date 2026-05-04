@@ -26,7 +26,7 @@ Individual file checkers (accept one or more file paths):
 | `check-abbrev <files>` | Abbreviations in identifiers (denylist + short-name detection) |
 | `check-comments <files>` | Inline and block comments |
 | `check-noqa <files>` | Inline `# noqa` and `# nosec` annotations (Python only) |
-| `check-repeated <files>` | Same value-derivation assignment (`name = pure_expr`, no function calls or container literals) repeated > `max_line_repetitions` times within a file |
+| `check-repeated <files>` | Same value-derivation assignment (`name = pure_expr`, no function calls, container literals, or primitive literals) repeated > `max_line_repetitions` times within a file |
 | `check-size <files>` | File and function line limits |
 | `check-complexity <files>` | Cyclomatic complexity of Bash functions |
 
@@ -187,6 +187,49 @@ If you feel like writing a comment, rename the variable or extract a function in
 
 ---
 
+## Repeated lines
+
+The same **value-derivation assignment** must not appear more than `max_line_repetitions` times (default: `2`) inside a single file. A value-derivation assignment is a line of the form `name = expression` where the right-hand side has no function calls, subscripts, container literals, or primitive literals.
+
+**Flagged — `gitignore = project / ".gitignore"` appears 3 times across these functions, extract a helper:**
+
+```python
+def is_gitignore_configured(project: Path) -> bool:
+    gitignore = project / ".gitignore"
+    ...
+
+def generate_gitignore(project: Path) -> None:
+    gitignore = project / ".gitignore"
+    ...
+
+def remove_gitignore(project: Path) -> None:
+    gitignore = project / ".gitignore"
+    ...
+```
+
+**Refactor:**
+
+```python
+def _gitignore_path(project: Path) -> Path:
+    return project / ".gitignore"
+```
+
+**Skipped (intentional false negatives):**
+
+| Pattern | Example | Why |
+|---|---|---|
+| Function calls | `data = parse_config()` | Cannot infer purity from text |
+| Subscripts | `value = config["key"]` | Often legitimate per-call lookup |
+| Container literals | `findings = []`, `headers = {}` | Each instance is a fresh local |
+| Object construction | `mock = MagicMock(...)` | New object per call |
+| Annotated assignments | `count: int = 5` | Likely declaration, not derivation |
+| Primitive literal RHS | `flag = False`, `count = 0`, `state = None` | State resets, not derivations |
+| Trailing-comma lines | `value = X,` | Function arguments / multi-line calls |
+
+In tests, prefer `pytest` fixtures over repeating `path = tmp_path / "literal"` across many test functions.
+
+---
+
 ## Local overrides (optional)
 
 If `.dev-quality.yaml` exists at the project root, it overrides the defaults above.
@@ -197,6 +240,8 @@ max_test_file_lines: 2000
 max_func_lines: 120
 max_complexity: 8
 line_length: 120
+max_line_repetitions: 2
+min_line_length: 20
 abbrev_min_length: 3
 abbrev_allowlist:
   - ok
