@@ -98,7 +98,7 @@ def test_if_increments_complexity(tmp_path: Path) -> None:
         "            fi\n        fi\n    fi",
     )
     findings = _check_bash(script, 3)
-    assert any("COMPLEXITY" in f for f in findings)
+    assert any("COMPLEXITY" in finding for finding in findings)
 
 
 def test_elif_increments_complexity(tmp_path: Path) -> None:
@@ -110,7 +110,7 @@ def test_elif_increments_complexity(tmp_path: Path) -> None:
         "    elif false; then\n        echo e\n    fi",
     )
     findings = _check_bash(script, 3)
-    assert any("COMPLEXITY" in f for f in findings)
+    assert any("COMPLEXITY" in finding for finding in findings)
 
 
 def test_for_increments_complexity(tmp_path: Path) -> None:
@@ -122,7 +122,7 @@ def test_for_increments_complexity(tmp_path: Path) -> None:
         "                done\n            done\n        done\n    done",
     )
     findings = _check_bash(script, 3)
-    assert any("COMPLEXITY" in f for f in findings)
+    assert any("COMPLEXITY" in finding for finding in findings)
 
 
 def test_while_increments_complexity(tmp_path: Path) -> None:
@@ -134,7 +134,7 @@ def test_while_increments_complexity(tmp_path: Path) -> None:
         "                done\n            done\n        done\n    done",
     )
     findings = _check_bash(script, 3)
-    assert any("COMPLEXITY" in f for f in findings)
+    assert any("COMPLEXITY" in finding for finding in findings)
 
 
 def test_until_increments_complexity(tmp_path: Path) -> None:
@@ -146,7 +146,7 @@ def test_until_increments_complexity(tmp_path: Path) -> None:
         "                done\n            done\n        done\n    done",
     )
     findings = _check_bash(script, 3)
-    assert any("COMPLEXITY" in f for f in findings)
+    assert any("COMPLEXITY" in finding for finding in findings)
 
 
 def test_case_branch_increments_complexity(tmp_path: Path) -> None:
@@ -157,7 +157,7 @@ def test_case_branch_increments_complexity(tmp_path: Path) -> None:
         "        c) echo c ;;\n        d) echo d ;;\n        e) echo e ;;\n    esac",
     )
     findings = _check_bash(script, 3)
-    assert any("COMPLEXITY" in f for f in findings)
+    assert any("COMPLEXITY" in finding for finding in findings)
 
 
 def test_reports_function_name(tmp_path: Path) -> None:
@@ -171,7 +171,7 @@ def test_reports_function_name(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     findings = _check_bash(script, 3)
-    assert any("my_func" in f for f in findings)
+    assert any("my_func" in finding for finding in findings)
 
 
 def test_reports_line_number(tmp_path: Path) -> None:
@@ -184,7 +184,7 @@ def test_reports_line_number(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     findings = _check_bash(script, 3)
-    assert any(":2:" in f for f in findings)
+    assert any(":2:" in finding for finding in findings)
 
 
 def test_multiple_functions_checked_independently(tmp_path: Path) -> None:
@@ -199,8 +199,8 @@ def test_multiple_functions_checked_independently(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     findings = _check_bash(script, 3)
-    assert any("complex_func" in f for f in findings)
-    assert not any("clean_func" in f for f in findings)
+    assert any("complex_func" in finding for finding in findings)
+    assert not any("clean_func" in finding for finding in findings)
 
 
 def test_read_error_returns_error_token(tmp_path: Path) -> None:

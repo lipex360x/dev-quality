@@ -122,7 +122,7 @@ def _run_on_files(
 ) -> bool:
     if not files:
         return True
-    code, output = _run([*command, *[str(f) for f in files]], extra_env)
+    code, output = _run([*command, *[str(file_path) for file_path in files]], extra_env)
     if output:
         findings.extend(output.splitlines())
     return code == 0
@@ -182,6 +182,7 @@ def _run_custom_file_checkers(
     skip: set[str],
     size_env: dict[str, str],
     complexity_env: dict[str, str],
+    abbrev_env: dict[str, str],
     results: dict[str, tuple[bool, int]],
 ) -> bool:
     passed = True
@@ -193,6 +194,8 @@ def _run_custom_file_checkers(
             extra_env = size_env
         elif checker == "check-complexity":
             extra_env = complexity_env
+        elif checker == "check-abbrev":
+            extra_env = abbrev_env
         findings: list[str] = []
         ok = _run_on_files([checker], all_files, findings, extra_env)
         _print_findings(findings)
@@ -267,7 +270,7 @@ def _run_py_checkers(
 
     if "mypy" not in skip:
         findings = []
-        mypy_files = [f for f in py_files if not _is_test_file(f)]
+        mypy_files = [file_path for file_path in py_files if not _is_test_file(file_path)]
         ok = _run_on_files(
             [
                 "mypy",
@@ -338,6 +341,15 @@ def _run_semgrep(
     return True
 
 
+def _build_abbrev_env(config: dict[str, object]) -> dict[str, str]:
+    min_length = str(config.get("abbrev_min_length", 2))
+    extra = list(config.get("abbrev_allowlist", []))  # type: ignore[call-overload]
+    abbrev_env: dict[str, str] = {"CHECK_ABBREV_MIN_LENGTH": min_length}
+    if extra:
+        abbrev_env["CHECK_ABBREV_ALLOWLIST_EXTRA"] = ",".join(str(item) for item in extra)
+    return abbrev_env
+
+
 def main() -> None:
     clear_cache = "--clear-cache" in sys.argv
     no_cache = "--no-cache" in sys.argv
@@ -377,8 +389,11 @@ def main() -> None:
     results: dict[str, tuple[bool, int]] = {}
     size_env = {"CHECK_SIZE_MAX_FILE": max_file_lines, "CHECK_SIZE_MAX_FUNC": max_func_lines}
     complexity_env = {"CHECK_COMPLEXITY_MAX": max_complexity}
+    abbrev_env = _build_abbrev_env(config)
 
-    passed = _run_custom_file_checkers(all_files, skip, size_env, complexity_env, results)
+    passed = _run_custom_file_checkers(
+        all_files, skip, size_env, complexity_env, abbrev_env, results
+    )
     passed &= _run_custom_dir_checkers(root, skip, results)
     if py_files:
         passed &= _run_py_checkers(

@@ -21,7 +21,7 @@ from conftest import _make_files, _write_config
 def test_collect_finds_py_and_sh(tmp_path: Path) -> None:
     _make_files(tmp_path, ["a.py", "b.sh", "c.txt"])
     result = _collect(tmp_path, frozenset([".py", ".sh"]))
-    names = {p.name for p in result}
+    names = {file_path.name for file_path in result}
     assert "a.py" in names
     assert "b.sh" in names
     assert "c.txt" not in names
@@ -30,7 +30,7 @@ def test_collect_finds_py_and_sh(tmp_path: Path) -> None:
 def test_collect_skips_venv(tmp_path: Path) -> None:
     _make_files(tmp_path, [".venv/lib/foo.py", "src/bar.py"])
     result = _collect(tmp_path, frozenset([".py"]))
-    names = {p.name for p in result}
+    names = {file_path.name for file_path in result}
     assert "foo.py" not in names
     assert "bar.py" in names
 
@@ -38,14 +38,14 @@ def test_collect_skips_venv(tmp_path: Path) -> None:
 def test_collect_skips_pycache(tmp_path: Path) -> None:
     _make_files(tmp_path, ["__pycache__/foo.pyc", "src/ok.py"])
     result = _collect(tmp_path, frozenset([".py"]))
-    names = {p.name for p in result}
+    names = {file_path.name for file_path in result}
     assert "ok.py" in names
 
 
 def test_collect_skips_git(tmp_path: Path) -> None:
     _make_files(tmp_path, [".git/hooks/pre-commit", "ok.py"])
     result = _collect(tmp_path, frozenset([".py"]))
-    names = {p.name for p in result}
+    names = {file_path.name for file_path in result}
     assert "ok.py" in names
     assert "pre-commit" not in names
 
@@ -53,7 +53,7 @@ def test_collect_skips_git(tmp_path: Path) -> None:
 def test_collect_returns_sorted(tmp_path: Path) -> None:
     _make_files(tmp_path, ["z.py", "a.py", "m.py"])
     result = _collect(tmp_path, frozenset([".py"]))
-    names = [p.name for p in result]
+    names = [file_path.name for file_path in result]
     assert names == sorted(names)
 
 
@@ -82,7 +82,7 @@ def test_collect_uses_git_ls_files_in_repo(tmp_path: Path) -> None:
     (tmp_path / ".gitignore").write_text("ignored.py\n")
     (tmp_path / "ignored.py").write_text("x = 1\n")
     result = _collect(tmp_path, frozenset([".py"]))
-    names = {p.name for p in result}
+    names = {file_path.name for file_path in result}
     assert "tracked.py" in names
     assert "untracked.py" in names
     assert "ignored.py" not in names
@@ -107,7 +107,7 @@ def test_collect_skips_staged_but_deleted_from_disk(tmp_path: Path) -> None:
     subprocess.run(["git", "add", "ghost.sh"], cwd=str(tmp_path), check=True, capture_output=True)  # noqa: S607
     ghost.unlink()
     result = _collect(tmp_path, frozenset([".sh"]))
-    assert all(p.name != "ghost.sh" for p in result)
+    assert all(file_path.name != "ghost.sh" for file_path in result)
 
 
 def test_load_config_returns_empty_when_no_file(tmp_path: Path) -> None:

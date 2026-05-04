@@ -44,8 +44,8 @@ def test_py_file_too_long(tmp_path: Path) -> None:
     source = tmp_path / "big.py"
     source.write_text(_py_lines(11), encoding="utf-8")
     findings = _check_python(source, 10, 5)
-    assert any("FILE_TOO_LONG" in f for f in findings)
-    assert any("11" in f for f in findings)
+    assert any("FILE_TOO_LONG" in finding for finding in findings)
+    assert any("11" in finding for finding in findings)
 
 
 def test_py_clean_function(tmp_path: Path) -> None:
@@ -64,15 +64,15 @@ def test_py_function_too_long(tmp_path: Path) -> None:
     source = tmp_path / "big.py"
     source.write_text(_py_func("huge", 6), encoding="utf-8")
     findings = _check_python(source, 100, 5)
-    assert any("FUNC_TOO_LONG" in f for f in findings)
-    assert any("huge" in f for f in findings)
+    assert any("FUNC_TOO_LONG" in finding for finding in findings)
+    assert any("huge" in finding for finding in findings)
 
 
 def test_py_reports_function_line_number(tmp_path: Path) -> None:
     source = tmp_path / "lined.py"
     source.write_text(_py_func("big_func", 6), encoding="utf-8")
     findings = _check_python(source, 100, 5)
-    assert any(":1:" in f for f in findings)
+    assert any(":1:" in finding for finding in findings)
 
 
 def test_py_read_error(tmp_path: Path) -> None:
@@ -86,7 +86,7 @@ def test_py_parse_error(tmp_path: Path) -> None:
     source = tmp_path / "bad.py"
     source.write_text("def foo(:\n    pass\n", encoding="utf-8")
     findings = _check_python(source, 100, 5)
-    assert any("PARSE_ERROR" in f for f in findings)
+    assert any("PARSE_ERROR" in finding for finding in findings)
 
 
 def test_py_async_function_too_long(tmp_path: Path) -> None:
@@ -94,7 +94,7 @@ def test_py_async_function_too_long(tmp_path: Path) -> None:
     source = tmp_path / "async.py"
     source.write_text(f"async def big_async():\n{body}\n", encoding="utf-8")
     findings = _check_python(source, 100, 5)
-    assert any("FUNC_TOO_LONG" in f for f in findings)
+    assert any("FUNC_TOO_LONG" in finding for finding in findings)
 
 
 def test_py_func_no_end_lineno(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -134,7 +134,7 @@ def test_bash_file_too_long(tmp_path: Path) -> None:
     script = tmp_path / "big.sh"
     script.write_text("#!/usr/bin/env bash\n" + "echo hi\n" * 10, encoding="utf-8")
     findings = _check_bash(script, 10, 5)
-    assert any("FILE_TOO_LONG" in f for f in findings)
+    assert any("FILE_TOO_LONG" in finding for finding in findings)
 
 
 def test_bash_clean_function(tmp_path: Path) -> None:
@@ -153,15 +153,15 @@ def test_bash_function_too_long(tmp_path: Path) -> None:
     script = tmp_path / "big.sh"
     script.write_text("#!/usr/bin/env bash\n" + _bash_func("huge_func", 6), encoding="utf-8")
     findings = _check_bash(script, 100, 5)
-    assert any("FUNC_TOO_LONG" in f for f in findings)
-    assert any("huge_func" in f for f in findings)
+    assert any("FUNC_TOO_LONG" in finding for finding in findings)
+    assert any("huge_func" in finding for finding in findings)
 
 
 def test_bash_reports_function_line_number(tmp_path: Path) -> None:
     script = tmp_path / "lined.sh"
     script.write_text("#!/usr/bin/env bash\n" + _bash_func("big_func", 6), encoding="utf-8")
     findings = _check_bash(script, 100, 5)
-    assert any(":2:" in f for f in findings)
+    assert any(":2:" in finding for finding in findings)
 
 
 def test_bash_single_line_function_not_flagged(tmp_path: Path) -> None:
@@ -186,22 +186,22 @@ def test_multiple_violations(tmp_path: Path) -> None:
     source = tmp_path / "multi.py"
     source.write_text(_py_lines(11) + _py_func("huge", 6), encoding="utf-8")
     findings = _check_python(source, 10, 5)
-    assert any("FILE_TOO_LONG" in f for f in findings)
-    assert any("FUNC_TOO_LONG" in f for f in findings)
+    assert any("FILE_TOO_LONG" in finding for finding in findings)
+    assert any("FUNC_TOO_LONG" in finding for finding in findings)
 
 
 def test_scan_file_dispatches_sh(tmp_path: Path) -> None:
     script = tmp_path / "big.sh"
     script.write_text("#!/usr/bin/env bash\n" + _bash_func("huge", 6), encoding="utf-8")
     findings = _scan_file(script, 100, 5)
-    assert any("FUNC_TOO_LONG" in f for f in findings)
+    assert any("FUNC_TOO_LONG" in finding for finding in findings)
 
 
 def test_scan_file_dispatches_py(tmp_path: Path) -> None:
     source = tmp_path / "big.py"
     source.write_text(_py_func("huge", 6), encoding="utf-8")
     findings = _scan_file(source, 100, 5)
-    assert any("FUNC_TOO_LONG" in f for f in findings)
+    assert any("FUNC_TOO_LONG" in finding for finding in findings)
 
 
 def test_main_dirty_exits_1(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import os
 import re
 import sys
 from pathlib import Path
@@ -58,10 +59,10 @@ _DEFAULT_ALLOWLIST: frozenset[str] = frozenset(
         "_",
         "id",
         "ok",
-        "io",
     ]
 )
 _DEFAULT_LANG: dict[str, frozenset[str]] = {"sh": frozenset(["dest"])}
+_DEFAULT_MIN_LENGTH: int = 2
 
 
 def _find_rules_file() -> Path | None:
@@ -69,15 +70,15 @@ def _find_rules_file() -> Path | None:
         Path(sys.argv[0]).parent.parent.parent / "shared" / "abbrev-rules.yaml",
         Path(__file__).parent.parent.parent.parent / "shared" / "abbrev-rules.yaml",
     ]
-    return next((p for p in candidates if p.exists()), None)
+    return next((candidate for candidate in candidates if candidate.exists()), None)
 
 
 def _load_rules(
     path: Path | None = None,
-) -> tuple[frozenset[str], frozenset[str], dict[str, frozenset[str]]]:
+) -> tuple[frozenset[str], frozenset[str], dict[str, frozenset[str]], int]:
     resolved = path if path is not None else _find_rules_file()
     if resolved is None or not resolved.exists():
-        return _DEFAULT_DENYLIST, _DEFAULT_ALLOWLIST, _DEFAULT_LANG
+        return _DEFAULT_DENYLIST, _DEFAULT_ALLOWLIST, _DEFAULT_LANG, _DEFAULT_MIN_LENGTH
     data = yaml.safe_load(resolved.read_text(encoding="utf-8"))
     denylist = frozenset(data.get("denylist", []))
     allowlist = frozenset(data.get("allowlist", []))
@@ -86,7 +87,8 @@ def _load_rules(
         for key in data
         if key.startswith("allowlist_") and key != "allowlist"
     }
-    return denylist, allowlist, lang_allowlists
+    min_length = int(data.get("min_length", _DEFAULT_MIN_LENGTH))
+    return denylist, allowlist, lang_allowlists, min_length
 
 
 def _flag(findings: list[str], path: Path, line: int, name: str) -> None:
@@ -108,7 +110,20 @@ def _node_identifier(node: ast.AST) -> str | None:
     return None
 
 
-def _check_file(path: Path, denylist: frozenset[str], allowlist: frozenset[str]) -> list[str]:
+def _is_flagged(
+    name: str, denylist: frozenset[str], allowlist: frozenset[str], min_length: int
+) -> bool:
+    if name in allowlist:
+        return False
+    return name in denylist or (min_length > 0 and len(name) <= min_length)
+
+
+def _check_file(
+    path: Path,
+    denylist: frozenset[str],
+    allowlist: frozenset[str],
+    min_length: int = _DEFAULT_MIN_LENGTH,
+) -> list[str]:
     findings: list[str] = []
     try:
         source = path.read_text(encoding="utf-8")
@@ -117,7 +132,7 @@ def _check_file(path: Path, denylist: frozenset[str], allowlist: frozenset[str])
         return [f"PARSE_ERROR:{path}:{parse_error}"]
     for node in ast.walk(tree):
         name = _node_identifier(node)
-        if name is not None and name not in allowlist and name in denylist:
+        if name is not None and _is_flagged(name, denylist, allowlist, min_length):
             _flag(findings, path, node.lineno, name)  # type: ignore[attr-defined]
     return findings
 
@@ -142,16 +157,17 @@ def _check_bash_line(
     denylist: frozenset[str],
     effective_allowlist: frozenset[str],
     findings: list[str],
+    min_length: int = _DEFAULT_MIN_LENGTH,
 ) -> None:
     plain_match = _BASH_PLAIN_RE.match(stripped)
     if plain_match:
         name = plain_match.group(1)
-        if name not in effective_allowlist and name in denylist:
+        if _is_flagged(name, denylist, effective_allowlist, min_length):
             _flag(findings, path, lineno, name)
         return
     for match in _BASH_VAR_RE.finditer(stripped):
-        name = next(g for g in match.groups() if g is not None)
-        if name not in effective_allowlist and name in denylist:
+        name = next(group for group in match.groups() if group is not None)
+        if _is_flagged(name, denylist, effective_allowlist, min_length):
             _flag(findings, path, lineno, name)
 
 
@@ -160,6 +176,7 @@ def _check_bash_file(
     denylist: frozenset[str],
     allowlist: frozenset[str],
     lang_allowlists: dict[str, frozenset[str]] | None = None,
+    min_length: int = _DEFAULT_MIN_LENGTH,
 ) -> list[str]:
     effective_allowlist = allowlist | (lang_allowlists or {}).get("sh", frozenset())
     findings: list[str] = []
@@ -171,7 +188,9 @@ def _check_bash_file(
         stripped = line.strip()
         if stripped.startswith("#"):
             continue
-        _check_bash_line(stripped, path, lineno, denylist, effective_allowlist, findings)
+        _check_bash_line(
+            stripped, path, lineno, denylist, effective_allowlist, findings, min_length
+        )
     return findings
 
 
@@ -180,20 +199,35 @@ def _scan_file(
     denylist: frozenset[str],
     allowlist: frozenset[str],
     lang_allowlists: dict[str, frozenset[str]],
+    min_length: int = _DEFAULT_MIN_LENGTH,
 ) -> list[str]:
     if file_path.suffix == ".sh":
-        return _check_bash_file(file_path, denylist, allowlist, lang_allowlists)
-    return _check_file(file_path, denylist, allowlist)
+        return _check_bash_file(file_path, denylist, allowlist, lang_allowlists, min_length)
+    return _check_file(file_path, denylist, allowlist, min_length)
+
+
+def _apply_env_overrides(
+    allowlist: frozenset[str],
+    min_length: int,
+) -> tuple[frozenset[str], int]:
+    min_length_env = os.environ.get("CHECK_ABBREV_MIN_LENGTH")
+    if min_length_env is not None:
+        min_length = int(min_length_env)
+    extra_raw = os.environ.get("CHECK_ABBREV_ALLOWLIST_EXTRA", "")
+    if extra_raw:
+        allowlist = allowlist | frozenset(extra_raw.split(","))
+    return allowlist, min_length
 
 
 def main() -> None:
     files = [Path(argument) for argument in sys.argv[1:]]
     if not files:
         sys.exit(0)
-    denylist, allowlist, lang_allowlists = _load_rules()
+    denylist, allowlist, lang_allowlists, min_length = _load_rules()
+    allowlist, min_length = _apply_env_overrides(allowlist, min_length)
     all_findings: list[str] = []
     for file_path in files:
-        all_findings.extend(_scan_file(file_path, denylist, allowlist, lang_allowlists))
+        all_findings.extend(_scan_file(file_path, denylist, allowlist, lang_allowlists, min_length))
     for finding in all_findings:
         print(finding)
     sys.exit(1 if all_findings else 0)

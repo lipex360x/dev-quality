@@ -28,11 +28,11 @@ def _write_config(tmp_path: Path, data: dict[str, object]) -> None:
 
 def _stub_collect(
     tmp_path: Path,
-    py: Sequence[str] = (),
-    sh: Sequence[str] = (),
+    python_names: Sequence[str] = (),
+    shell_names: Sequence[str] = (),
 ) -> Callable[[Path, frozenset[str]], list[Path]]:
-    py_files = [tmp_path / name for name in py]
-    sh_files = [tmp_path / name for name in sh]
+    py_files = [tmp_path / name for name in python_names]
+    sh_files = [tmp_path / name for name in shell_names]
 
     def impl(root: Path, suffixes: frozenset[str]) -> list[Path]:
         if ".py" in suffixes:

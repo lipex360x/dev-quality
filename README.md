@@ -195,6 +195,56 @@ uvx --from git+https://github.com/lipex360x/dev-quality check-bash-logs /path/to
 
 ---
 
+## check-abbrev — abbreviation rules
+
+Two complementary rules run together:
+
+**1. Short names (length ≤ 2, default)**
+Any identifier with 2 or fewer characters is flagged — unless it appears in the allowlist.
+
+**2. Known abbreviations (any length)**
+Names in the denylist are always flagged: `buf`, `cfg`, `cmd`, `ctx`, `err`, `exc`, `ext`, `fmt`, `func`, `idx`, `msg`, `ref`, `tmp`, and [more](shared/abbrev-rules.yaml).
+
+**Default allowlist — names that are never flagged:**
+
+| Name | Reason |
+|---|---|
+| `i`, `j`, `k` | Loop counters — universal convention |
+| `_` | Throwaway variable — universal convention |
+| `id` | Identifier — used across all languages |
+| `ok` | Boolean result — idiomatic in Python/Go |
+| `self`, `cls` | Python instance/class receivers |
+| `args`, `kwargs` | Python variadic parameters |
+
+**Extending the allowlist for your project**
+
+Add an `abbrev_allowlist` key to `.dev-quality.yaml` at the project root. These names are merged with the defaults — no defaults are removed:
+
+```yaml
+# .dev-quality.yaml
+abbrev_allowlist:
+  - py    # short for "Python files" in file-list variables
+  - sh    # short for "Shell files" in file-list variables
+```
+
+To raise the minimum length (flag names ≤ 3 chars instead of ≤ 2):
+
+```yaml
+# .dev-quality.yaml
+abbrev_min_length: 3
+```
+
+To disable length-based checking entirely (denylist only):
+
+```yaml
+# .dev-quality.yaml
+abbrev_min_length: 0
+```
+
+<div align="right"><a href="#dev-quality">↑ Back to top</a></div>
+
+---
+
 ## check-all behavior
 
 - **`.gitignore` respected** — file collection uses `git ls-files` when the target is a git repository, so ignored files and directories are never checked. Falls back to recursive scan when outside a git repo.
@@ -275,6 +325,8 @@ Create a `.dev-quality.yaml` at the project root to customize `check-all` behavi
 | `max_file_lines` | `800` | Maximum number of lines per file |
 | `max_func_lines` | `100` | Maximum number of lines per function |
 | `python_version` | `"3.11"` | Python version passed to mypy |
+| `abbrev_min_length` | `2` | Flag identifiers with this many characters or fewer (set to `0` to use denylist only) |
+| `abbrev_allowlist` | `[]` | Extra identifiers to allow in addition to the built-in defaults |
 
 ```yaml
 skip:
@@ -286,6 +338,10 @@ max_complexity: 6
 max_file_lines: 800
 max_func_lines: 100
 python_version: "3.11"
+abbrev_min_length: 2
+abbrev_allowlist:
+  - py
+  - sh
 ```
 
 <div align="right"><a href="#dev-quality">↑ Back to top</a></div>

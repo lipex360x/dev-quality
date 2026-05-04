@@ -34,7 +34,7 @@ Accept one or more file paths. Run automatically by `check-all`.
 
 | Command | What it checks |
 |---|---|
-| `check-abbrev <files>` | Banned abbreviations in identifiers |
+| `check-abbrev <files>` | Abbreviations in identifiers (denylist + short-name detection) |
 | `check-comments <files>` | Inline and block comments |
 | `check-size <files>` | File and function line limits |
 | `check-complexity <files>` | Cyclomatic complexity of Bash functions |
@@ -69,10 +69,21 @@ the defaults are already in effect; no file needed.
 | Cyclomatic complexity (Bash) | 6 |
 | Line length | 100 |
 
-## Banned abbreviations
+## Abbreviation rules
 
-Never use these as identifiers (variable names, function names, parameters,
-local variables) in `.py` or `.sh` files:
+`check-abbrev` enforces two complementary rules:
+
+1. **Short-name detection** — any identifier with ≤ 2 characters is flagged unless it is
+   in the allowlist. This catches abbreviations like `cc`, `fn`, `db` automatically.
+2. **Denylist** — specific 3-character (and longer) abbreviations are always flagged
+   regardless of length.
+
+Both rules apply to variable names, function names, parameters, and local variables in
+`.py` and `.sh` files.
+
+### Denylist
+
+Never use these as identifiers:
 
 | Abbreviation | Use instead |
 |---|---|
@@ -112,9 +123,30 @@ local variables) in `.py` or `.sh` files:
 | `val` | `value` |
 | `var` | `variable` |
 
-**Always allowed:** `self`, `cls`, `args`, `kwargs`, `i`, `j`, `k`, `_`, `id`, `ok`, `io`.
+### Allowlist (always permitted regardless of length)
+
+`self`, `cls`, `args`, `kwargs`, `i`, `j`, `k`, `_`, `id`, `ok`
+
+- `i`, `j`, `k` are permitted as numeric loop counters only — not as abbreviations for
+  the item being iterated (e.g., `for finding in findings`, not `for f in findings`).
+- `id` is permitted as a database/object identifier convention.
+- `ok` is a complete word, not an abbreviation.
 
 In Bash only, `dest` is also allowed (counterpart to `src` in file-operation functions).
+
+### Loop variables
+
+Loop variables are **not exempt** from abbreviation rules. Use the full element name:
+
+```python
+for finding in findings:   # correct
+for f in findings:         # ABBREV — f is an abbreviation of finding
+```
+
+```bash
+for candidate in "${candidates[@]}"; do   # correct
+for c in "${candidates[@]}"; do           # ABBREV — c is an abbreviation
+done
 
 ## Comments
 
@@ -203,9 +235,18 @@ max_func_lines: 120    # overrides 100
 max_complexity: 8      # overrides 6
 line_length: 120       # overrides 100
 python_version: "3.12"
+abbrev_min_length: 3   # flag names with ≤ 3 chars (default: 2)
+abbrev_allowlist:      # extra identifiers to allow in this project
+  - ok
+  - py
+  - sh
 skip:
   - check-bash-logs
 ```
+
+`abbrev_allowlist` adds identifiers on top of the built-in allowlist — it does not
+replace it. The built-in allowlist (`self`, `cls`, `args`, `kwargs`, `i`, `j`, `k`,
+`_`, `id`, `ok`) is always active.
 
 If the file does not exist — including when running via `uvx` — the defaults apply as-is.
 
@@ -247,7 +288,7 @@ You will be tempted when:
 
 Before reporting a task as done:
 
-1. No banned abbreviations used as identifiers
+1. No banned abbreviations used as identifiers; no identifiers with ≤ 2 chars unless in the allowlist
 2. No comments written (except the allowed exceptions)
 3. No function exceeds the active `max_func_lines` limit (100 unless overridden)
 4. No file exceeds the active `max_file_lines` limit (800 unless overridden)

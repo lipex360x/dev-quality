@@ -19,7 +19,7 @@ def test_main_exits_0_when_all_pass(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok),
         pytest.raises(SystemExit) as raised,
     ):
@@ -35,7 +35,7 @@ def test_main_exits_1_when_any_fails(
     fail = MagicMock(returncode=1, stdout="ABBREV:bad.py:1:ext", stderr="")
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["bad.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["bad.py"])),
         patch("subprocess.run", side_effect=[fail] + [ok] * 20),
         pytest.raises(SystemExit) as raised,
     ):
@@ -62,7 +62,7 @@ def test_main_always_runs_shellcheck(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, sh=["script.sh"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, shell_names=["script.sh"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -78,7 +78,7 @@ def test_main_skips_py_tools_when_no_py_files(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, sh=["script.sh"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, shell_names=["script.sh"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -96,7 +96,7 @@ def test_main_skip_config_prevents_checker(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -114,7 +114,7 @@ def test_main_line_length_passed_to_ruff(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -138,7 +138,7 @@ def test_main_max_complexity_passed_as_env(
         return ok
 
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, sh=["script.sh"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, shell_names=["script.sh"])),
         patch("subprocess.run", side_effect=capture_run),
         pytest.raises(SystemExit),
     ):
@@ -161,7 +161,7 @@ def test_main_size_config_passed_as_env(
         return ok
 
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", side_effect=capture_run),
         pytest.raises(SystemExit),
     ):
@@ -178,7 +178,7 @@ def test_main_skip_custom_file_checker(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -195,7 +195,7 @@ def test_main_skip_custom_dir_checker(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, sh=["script.sh"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, shell_names=["script.sh"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -212,7 +212,7 @@ def test_main_skip_ruff(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -229,7 +229,7 @@ def test_main_skip_bandit(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -246,7 +246,7 @@ def test_main_skip_pylint(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -263,7 +263,7 @@ def test_main_python_version_passed_to_mypy(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -346,7 +346,7 @@ def test_main_prints_cache_hint_after_run(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok),
         pytest.raises(SystemExit),
     ):
@@ -365,7 +365,7 @@ def test_main_no_cache_flag_omits_cache_hint(
     monkeypatch.setattr(sys, "argv", ["check-all", "--no-cache", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok),
         pytest.raises(SystemExit),
     ):
@@ -380,7 +380,7 @@ def test_main_ruff_default_uses_cache_dir(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -398,7 +398,7 @@ def test_main_mypy_default_uses_cache_dir(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -416,7 +416,7 @@ def test_main_no_cache_flag_disables_ruff_cache(
     monkeypatch.setattr(sys, "argv", ["check-all", "--no-cache", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -434,7 +434,7 @@ def test_main_no_cache_flag_disables_mypy_incremental(
     monkeypatch.setattr(sys, "argv", ["check-all", "--no-cache", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -456,7 +456,7 @@ def test_main_mypy_excludes_test_files(
             "check_all._collect",
             side_effect=_stub_collect(
                 tmp_path,
-                py=["src.py", "tests/conftest.py", "test_foo.py", "bar_test.py"],
+                python_names=["src.py", "tests/conftest.py", "test_foo.py", "bar_test.py"],
             ),
         ),
         patch("subprocess.run", return_value=ok) as mock_run,
@@ -494,7 +494,7 @@ def test_main_ruff_check_ignores_s101(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):
@@ -519,7 +519,7 @@ def test_main_prints_summary(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok),
         pytest.raises(SystemExit),
     ):
@@ -538,7 +538,7 @@ def test_main_prints_summary_on_failure(
     fail = MagicMock(returncode=1, stdout="error line", stderr="")
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["bad.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["bad.py"])),
         patch("subprocess.run", side_effect=[fail] + [ok] * 20),
         pytest.raises(SystemExit),
     ):
@@ -708,7 +708,7 @@ def test_main_ruff_check_has_per_file_ignores_for_plr2004(
     monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
     ok = MagicMock(returncode=0, stdout="", stderr="")
     with (
-        patch("check_all._collect", side_effect=_stub_collect(tmp_path, py=["ok.py"])),
+        patch("check_all._collect", side_effect=_stub_collect(tmp_path, python_names=["ok.py"])),
         patch("subprocess.run", return_value=ok) as mock_run,
         pytest.raises(SystemExit),
     ):

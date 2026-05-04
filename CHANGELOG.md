@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.8.0] — 2026-05-04
+
+### Added
+- `check-abbrev`: proactive short-name detection — identifiers with ≤ 2 characters are now flagged by default, not just denylist entries. `min_length` is configurable via `abbrev-rules.yaml` or `CHECK_ABBREV_MIN_LENGTH` env var.
+- `check-all`: new `abbrev_min_length` and `abbrev_allowlist` config keys in `.dev-quality.yaml` passed to `check-abbrev` via environment variables.
+
+### Changed
+- `_DEFAULT_ALLOWLIST`: removed `io` — it is an abbreviation of Input/Output and should be spelled out.
+- Loop variables are not exempt from abbreviation rules — use the full element name (`for finding in findings`, not `for f in findings`).
+
+---
+
+## [v0.7.2] — 2026-05-04
+
+### Fixed
+- `release.py`: `_update_readme_version` now also rewrites all `rev: v<old>` references in README examples — they were previously left behind after every version bump
+
+---
+
 ## [v0.7.1] — 2026-05-04
 
 ### Fixed
