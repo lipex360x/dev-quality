@@ -124,10 +124,18 @@ Never use manual `git tag` / `git push` / `gh release create` — always use the
 
 **On every behavior-changing commit:**
 1. `CHANGELOG.md` → add entry under the new version (this sets the version)
-2. `stacks/python/checkers/dev_quality_skill/SKILL.md` → reflect any new or changed rule
-3. `README.md` → update any user-facing sections affected by the change (new commands, new config keys, updated defaults, new workflows). README must always reflect the current behavior — never leave it out of sync.
+2. `stacks/python/checkers/dev_quality_skill/SKILL.md` → reflect any new or changed rule. The skill is layered (see below) — update the right layer:
+   - **Core layer** (top of the file, language-agnostic) for changes to: TDD, abbreviations, comments, size limits, `.dev-quality.yaml`, self-audit, install/update flow, commands. These rules apply to every language.
+   - **Language layer** (`## Python`, `## Bash`, `## TypeScript`, `## Java`, ...) for changes that only apply to one language: linter rules, type-checker conventions, naming patterns, language-specific tooling.
+   - **Adding a new language** → add a new top-level section at the bottom of the file. Do not duplicate Core rules in the language section — the language section only carries what is genuinely specific.
+3. `README.md` → update any user-facing sections affected by the change (new commands, new config keys, updated defaults, new workflows, new languages). README must always reflect the current behavior — never leave it out of sync.
 4. Commit
 5. `uv run release.py --release` → reads version from CHANGELOG, updates `pyproject.toml` + README badge, commits those, creates tag, pushes, creates GitHub Release
+
+**The skill is consumed by multiple AI assistants — not just Claude.** The `install-skill` command exists precisely because users install it into whatever skills directory their tool uses (Claude Code, Cursor, Continue, custom). Therefore:
+- `SKILL.md` frontmatter must use only portable fields (`name`, `description`) — no `allowed-tools`, `user-invocable`, or other Claude-specific keys
+- The body must be tool-neutral — no "Claude does X", no slash-command references, no tool-specific tool names. Use imperative voice or "the AI assistant" when a subject is unavoidable.
+- When in doubt, ask: "would a non-Claude tool that loaded this file still understand it?" — if no, rewrite.
 
 **For documentation-only commits** (README prose, CLAUDE.md, guides): commit + `git push`, do **not** run `release.py`.
 
