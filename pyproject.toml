@@ -10,6 +10,7 @@ py-modules = [
     "check_bash_tests",
     "check_comments",
     "check_complexity",
+    "check_noqa",
     "check_size",
     "install_skill",
 ]
