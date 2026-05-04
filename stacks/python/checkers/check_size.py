@@ -7,6 +7,18 @@ import sys
 from pathlib import Path
 
 _FUNC_RE = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*\(\s*\)|^function\s+([a-zA-Z_][a-zA-Z0-9_]*)")
+_TEST_DIRS = frozenset(["tests", "test"])
+
+
+def _is_test_file(path: Path) -> bool:
+    name = path.name
+    return (
+        any(part in _TEST_DIRS for part in path.parts)
+        or name.startswith("test_")
+        or name.endswith("_test.py")
+        or name.endswith(".test.py")
+        or name == "conftest.py"
+    )
 
 
 def _py_file_findings(path: Path, line_count: int, max_file: int) -> list[str]:
@@ -100,10 +112,12 @@ def main() -> None:
     if not files:
         sys.exit(0)
     max_file = int(os.environ.get("CHECK_SIZE_MAX_FILE", "800"))
+    max_test_file = int(os.environ.get("CHECK_SIZE_MAX_TEST_FILE", "1500"))
     max_func = int(os.environ.get("CHECK_SIZE_MAX_FUNC", "80"))
     all_findings: list[str] = []
     for file_path in files:
-        all_findings.extend(_scan_file(file_path, max_file, max_func))
+        effective_max = max_test_file if _is_test_file(file_path) else max_file
+        all_findings.extend(_scan_file(file_path, effective_max, max_func))
     for finding in all_findings:
         print(finding)
     sys.exit(1 if all_findings else 0)

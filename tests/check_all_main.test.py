@@ -794,3 +794,8 @@ def test_main_warns_when_precommit_rev_is_outdated(
     out = capsys.readouterr().out
     assert "WARNING" in out
     assert "pre-commit autoupdate" in out
+    warning_positions = [index for index, line in enumerate(out.splitlines()) if "WARNING" in line]
+    summary_positions = [index for index, line in enumerate(out.splitlines()) if "Result" in line]
+    assert warning_positions
+    assert summary_positions
+    assert warning_positions[-1] > summary_positions[-1]

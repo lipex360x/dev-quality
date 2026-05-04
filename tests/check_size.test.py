@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from check_size import _check_bash, _check_python, _scan_file, main
+from check_size import _check_bash, _check_python, _is_test_file, _scan_file, main
 
 
 def _py_lines(count: int) -> str:
@@ -229,3 +229,82 @@ def test_main_clean_exits_0(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     with pytest.raises(SystemExit) as raised:
         main()
     assert raised.value.code == 0
+
+
+def test_is_test_file_from_tests_directory() -> None:
+    assert _is_test_file(Path("tests/foo.test.py")) is True
+
+
+def test_is_test_file_test_prefix() -> None:
+    assert _is_test_file(Path("test_foo.py")) is True
+
+
+def test_is_test_file_test_suffix() -> None:
+    assert _is_test_file(Path("foo_test.py")) is True
+
+
+def test_is_test_file_dot_test_suffix() -> None:
+    assert _is_test_file(Path("foo.test.py")) is True
+
+
+def test_is_test_file_conftest() -> None:
+    assert _is_test_file(Path("conftest.py")) is True
+
+
+def test_is_not_test_file_regular() -> None:
+    assert _is_test_file(Path("foo.py")) is False
+
+
+def test_main_test_file_at_900_below_test_limit_passes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    test_dir = tmp_path / "tests"
+    test_dir.mkdir()
+    source = test_dir / "big_test.py"
+    source.write_text(_py_lines(900), encoding="utf-8")
+    monkeypatch.setenv("CHECK_SIZE_MAX_FILE", "800")
+    monkeypatch.setenv("CHECK_SIZE_MAX_TEST_FILE", "1500")
+    monkeypatch.setenv("CHECK_SIZE_MAX_FUNC", "1000")
+    monkeypatch.setattr(sys, "argv", ["check_size.py", str(source)])
+    with pytest.raises(SystemExit) as raised:
+        main()
+    assert raised.value.code == 0
+    assert capsys.readouterr().out == ""
+
+
+def test_main_test_file_over_test_limit_flagged(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    test_dir = tmp_path / "tests"
+    test_dir.mkdir()
+    source = test_dir / "huge_test.py"
+    source.write_text(_py_lines(1600), encoding="utf-8")
+    monkeypatch.setenv("CHECK_SIZE_MAX_FILE", "800")
+    monkeypatch.setenv("CHECK_SIZE_MAX_TEST_FILE", "1500")
+    monkeypatch.setenv("CHECK_SIZE_MAX_FUNC", "1000")
+    monkeypatch.setattr(sys, "argv", ["check_size.py", str(source)])
+    with pytest.raises(SystemExit) as raised:
+        main()
+    assert raised.value.code == 1
+    assert "FILE_TOO_LONG" in capsys.readouterr().out
+
+
+def test_main_non_test_file_uses_standard_limit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    source = tmp_path / "big.py"
+    source.write_text(_py_lines(900), encoding="utf-8")
+    monkeypatch.setenv("CHECK_SIZE_MAX_FILE", "800")
+    monkeypatch.setenv("CHECK_SIZE_MAX_TEST_FILE", "1500")
+    monkeypatch.setenv("CHECK_SIZE_MAX_FUNC", "1000")
+    monkeypatch.setattr(sys, "argv", ["check_size.py", str(source)])
+    with pytest.raises(SystemExit) as raised:
+        main()
+    assert raised.value.code == 1
+    assert "FILE_TOO_LONG" in capsys.readouterr().out

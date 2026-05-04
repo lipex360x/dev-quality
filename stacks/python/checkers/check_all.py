@@ -343,6 +343,14 @@ def _run_semgrep(
     return True
 
 
+def _build_size_env(config: dict[str, object]) -> dict[str, str]:
+    return {
+        "CHECK_SIZE_MAX_FILE": str(config.get("max_file_lines", 800)),
+        "CHECK_SIZE_MAX_FUNC": str(config.get("max_func_lines", 100)),
+        "CHECK_SIZE_MAX_TEST_FILE": str(config.get("max_test_file_lines", 1500)),
+    }
+
+
 def _build_abbrev_env(config: dict[str, object]) -> dict[str, str]:
     min_length = str(config.get("abbrev_min_length", 2))
     extra = list(config.get("abbrev_allowlist", []))  # type: ignore[call-overload]
@@ -352,10 +360,17 @@ def _build_abbrev_env(config: dict[str, object]) -> dict[str, str]:
     return abbrev_env
 
 
-def _warn_if_precommit_outdated(root: Path) -> None:
+def _print_footer(outdated_warning: str | None, cache_dir: Path | None) -> None:
+    if outdated_warning:
+        print(outdated_warning, flush=True)
+    if cache_dir is not None:
+        _print_cache_hint(cache_dir)
+
+
+def _warn_if_precommit_outdated(root: Path) -> str | None:
     config_path = root / ".pre-commit-config.yaml"
     if not config_path.exists():
-        return
+        return None
     try:
         data = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
         for repo in data.get("repos", []):
@@ -364,14 +379,16 @@ def _warn_if_precommit_outdated(root: Path) -> None:
             pinned = str(repo.get("rev", ""))
             current = f"v{importlib.metadata.version('dev-quality')}"
             if pinned != current:
-                print(
+                message = (
                     f"WARNING: .pre-commit-config.yaml is pinned to {pinned} "
                     f"but this tool is at {current}. "
-                    f"Run `pre-commit autoupdate` to sync.",
-                    flush=True,
+                    f"Run `pre-commit autoupdate` to sync."
                 )
+                print(message, flush=True)
+                return message
     except (OSError, yaml.YAMLError, importlib.metadata.PackageNotFoundError):
-        return
+        return None
+    return None
 
 
 def main() -> None:
@@ -388,14 +405,12 @@ def main() -> None:
 
     root = Path(args[0]).resolve() if args else Path.cwd()
     print(f"Scanning {root} ...", flush=True)
-    _warn_if_precommit_outdated(root)
+    outdated_warning = _warn_if_precommit_outdated(root)
 
     config = _load_config(root)
     skip = set(config.get("skip", []))  # type: ignore[call-overload]
     line_length = str(config.get("line_length", 100))
     max_complexity = str(config.get("max_complexity", 6))
-    max_file_lines = str(config.get("max_file_lines", 800))
-    max_func_lines = str(config.get("max_func_lines", 100))
     python_version = str(config.get("python_version", "3.11"))
 
     if no_cache:
@@ -412,7 +427,7 @@ def main() -> None:
     all_files = sorted(py_files + sh_files)
 
     results: dict[str, tuple[bool, int]] = {}
-    size_env = {"CHECK_SIZE_MAX_FILE": max_file_lines, "CHECK_SIZE_MAX_FUNC": max_func_lines}
+    size_env = _build_size_env(config)
     complexity_env = {"CHECK_COMPLEXITY_MAX": max_complexity}
     abbrev_env = _build_abbrev_env(config)
 
@@ -428,9 +443,7 @@ def main() -> None:
     passed &= _run_semgrep(root, skip, results)
 
     _print_summary(results)
-    if cache_dir is not None:
-        _print_cache_hint(cache_dir)
-
+    _print_footer(outdated_warning, cache_dir)
     sys.exit(0 if passed else 1)
 
 

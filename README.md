@@ -42,6 +42,7 @@ Central repository for code quality tooling across stacks. Houses custom checker
 
 | Hook | What it validates |
 |---|---|
+| `check-noqa` | Inline `# noqa` and `# nosec` annotations — use `per-file-ignores` in `pyproject.toml` instead |
 | `ruff check` | Linting: imports, style, bugs, McCabe complexity, security; PLR2004 suppressed in test files |
 | `ruff format` | Code formatting |
 | `mypy` | Static type checking in strict mode |
@@ -342,7 +343,7 @@ Create a `.dev-quality.yaml` at the project root to customize `check-all` behavi
 
 | Key | Default | Description |
 |---|---|---|
-| `skip` | `[]` | Checkers to disable. Valid values: `check-abbrev`, `check-comments`, `check-size`, `check-complexity`, `check-bash-tests`, `check-bash-logs`, `ruff`, `mypy`, `vulture`, `bandit`, `pylint`, `shellcheck`, `semgrep` |
+| `skip` | `[]` | Checkers to disable. Valid values: `check-abbrev`, `check-comments`, `check-noqa`, `check-size`, `check-complexity`, `check-bash-tests`, `check-bash-logs`, `ruff`, `mypy`, `vulture`, `bandit`, `pylint`, `shellcheck`, `semgrep` |
 | `line_length` | `100` | Maximum line length passed to ruff |
 | `max_complexity` | `6` | Maximum cyclomatic complexity for Bash functions |
 | `max_file_lines` | `800` | Maximum number of lines per file |
@@ -382,6 +383,7 @@ repos:
     hooks:
       - id: check-abbrev
       - id: check-comments
+      - id: check-noqa
       - id: check-size
       - id: check-complexity
       - id: check-bash-tests

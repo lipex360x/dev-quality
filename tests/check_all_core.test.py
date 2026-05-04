@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from check_all import (
+    _build_size_env,
     _collect,
     _load_config,
     _print_summary,
@@ -300,6 +301,29 @@ def test_warn_if_precommit_outdated_warns_when_rev_is_old(
     assert "pre-commit autoupdate" in out
 
 
+def test_warn_if_precommit_outdated_returns_message_when_outdated(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _write_precommit_config(tmp_path, "https://github.com/lipex360x/dev-quality", "v0.7.0")
+    with patch("importlib.metadata.version", return_value="0.8.1"):
+        result = _warn_if_precommit_outdated(tmp_path)
+    capsys.readouterr()
+    assert result is not None
+    assert "WARNING" in result
+
+
+def test_warn_if_precommit_outdated_returns_none_when_current(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _write_precommit_config(tmp_path, "https://github.com/lipex360x/dev-quality", "v0.8.1")
+    with patch("importlib.metadata.version", return_value="0.8.1"):
+        result = _warn_if_precommit_outdated(tmp_path)
+    capsys.readouterr()
+    assert result is None
+
+
 def test_warn_if_precommit_outdated_silent_when_rev_matches(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -314,8 +338,9 @@ def test_warn_if_precommit_outdated_silent_when_no_config(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    _warn_if_precommit_outdated(tmp_path)
+    result = _warn_if_precommit_outdated(tmp_path)
     assert capsys.readouterr().out == ""
+    assert result is None
 
 
 def test_warn_if_precommit_outdated_silent_when_different_repo(
@@ -335,3 +360,19 @@ def test_warn_if_precommit_outdated_silent_on_malformed_yaml(
     (tmp_path / ".pre-commit-config.yaml").write_text(":", encoding="utf-8")
     _warn_if_precommit_outdated(tmp_path)
     assert capsys.readouterr().out == ""
+
+
+def test_build_size_env_defaults() -> None:
+    size_environment = _build_size_env({})
+    assert size_environment["CHECK_SIZE_MAX_FILE"] == "800"
+    assert size_environment["CHECK_SIZE_MAX_FUNC"] == "100"
+    assert size_environment["CHECK_SIZE_MAX_TEST_FILE"] == "1500"
+
+
+def test_build_size_env_reads_config() -> None:
+    size_environment = _build_size_env(
+        {"max_file_lines": 1000, "max_func_lines": 120, "max_test_file_lines": 2000}
+    )
+    assert size_environment["CHECK_SIZE_MAX_FILE"] == "1000"
+    assert size_environment["CHECK_SIZE_MAX_FUNC"] == "120"
+    assert size_environment["CHECK_SIZE_MAX_TEST_FILE"] == "2000"

@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.11.0] — 2026-05-04
+
+### Added
+- `check-size`: test files now use a separate, higher line limit (default 1500) instead of the production file limit (default 800). Detects test files by directory (`tests/`, `test/`), name prefix (`test_*`), or suffix (`*_test.py`, `*.test.py`, `conftest.py`). Controlled via `CHECK_SIZE_MAX_TEST_FILE` env var.
+- `check-all`: new `max_test_file_lines` config key in `.dev-quality.yaml` (default `1500`) passed to `check-size` via `CHECK_SIZE_MAX_TEST_FILE`.
+- `check-all`: extracted `_build_size_env(config)` helper — consistent with `_build_abbrev_env` pattern.
+
+---
+
+## [v0.10.1] — 2026-05-04
+
+### Fixed
+- `check-noqa` was missing from `py-modules` in `pyproject.toml` — the module was not included in the built package
+- `check-all`: outdated pre-commit warning now also appears after the summary, so it is not buried at the top of long output
+
+---
+
 ## [v0.10.0] — 2026-05-04
 
 ### Added

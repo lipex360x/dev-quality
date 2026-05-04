@@ -36,6 +36,7 @@ Accept one or more file paths. Run automatically by `check-all`.
 |---|---|
 | `check-abbrev <files>` | Abbreviations in identifiers (denylist + short-name detection) |
 | `check-comments <files>` | Inline and block comments |
+| `check-noqa <files>` | Inline `# noqa` and `# nosec` annotations |
 | `check-size <files>` | File and function line limits |
 | `check-complexity <files>` | Cyclomatic complexity of Bash functions |
 
@@ -65,6 +66,7 @@ the defaults are already in effect; no file needed.
 | Limit | Default |
 |-------|---------|
 | Lines per file | 800 |
+| Lines per test file | 1500 |
 | Lines per function | 100 |
 | Cyclomatic complexity (Bash) | 6 |
 | Line length | 100 |
@@ -190,10 +192,17 @@ No comments in `.py` or `.sh` files. The only exceptions:
 |---------|---------|
 | Shebang | `#!/usr/bin/env bash` |
 | Shellcheck directives | `# shellcheck source=/dev/null` |
-| Ruff suppressions | `# noqa: S603` |
 | Mypy suppressions | `# type: ignore[attr-defined]` |
 | Coverage exclusions | `# pragma: no cover` |
 | PEP 723 script blocks | `# /// script` … `# ///` |
+
+**`# noqa` and `# nosec` are not allowed inline** — blocked by `check-noqa`. If a ruff or
+bandit rule fires on unavoidable code, add it to `per-file-ignores` in `pyproject.toml`:
+
+```toml
+[tool.ruff.lint.per-file-ignores]
+"scripts/deploy.sh" = ["S603", "S607"]
+```
 
 If you feel like writing a comment, rename the variable or extract a function instead.
 
@@ -264,13 +273,14 @@ If `.dev-quality.yaml` exists at the project root, it overrides the defaults
 from the "Active limits" table above. Read it before starting any task.
 
 ```yaml
-max_file_lines: 1000   # overrides 800
-max_func_lines: 120    # overrides 100
-max_complexity: 8      # overrides 6
-line_length: 120       # overrides 100
+max_file_lines: 1000        # overrides 800
+max_test_file_lines: 2000   # overrides 1500
+max_func_lines: 120         # overrides 100
+max_complexity: 8           # overrides 6
+line_length: 120            # overrides 100
 python_version: "3.12"
-abbrev_min_length: 3   # flag names with ≤ 3 chars (default: 2)
-abbrev_allowlist:      # extra identifiers to allow in this project
+abbrev_min_length: 3        # flag names with ≤ 3 chars (default: 2)
+abbrev_allowlist:           # extra identifiers to allow in this project
   - ok
   - py
   - sh
