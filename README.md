@@ -362,7 +362,7 @@ Create a `.dev-quality.yaml` at the project root to customize `check-all` behavi
 | Key | Default | Description |
 |---|---|---|
 | `skip` | `[]` | Checkers to disable. Valid values: `check-abbrev`, `check-comments`, `check-noqa`, `check-size`, `check-complexity`, `check-bash-tests`, `check-bash-logs`, `ruff`, `mypy`, `vulture`, `bandit`, `pylint`, `shellcheck`, `semgrep` |
-| `line_length` | `100` | Maximum line length passed to ruff |
+| `line_length` | `120` | Maximum line length passed to ruff |
 | `max_complexity` | `6` | Maximum cyclomatic complexity for Bash functions |
 | `max_file_lines` | `800` | Maximum number of lines per file |
 | `max_test_file_lines` | `1500` | Maximum number of lines per test file |

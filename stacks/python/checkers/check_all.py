@@ -48,16 +48,12 @@ def _collect(root: Path, suffixes: frozenset[str]) -> list[Path]:
             check=True,
         )
         lines = [line for line in result.stdout.splitlines() if line]
-        return sorted(
-            path for line in lines if (path := root / line).suffix in suffixes and path.is_file()
-        )
+        return sorted(path for line in lines if (path := root / line).suffix in suffixes and path.is_file())
     except subprocess.CalledProcessError:
         return sorted(
             path
             for path in root.rglob("*")
-            if not any(part in _SKIP_DIRS for part in path.parts)
-            and path.suffix in suffixes
-            and path.is_file()
+            if not any(part in _SKIP_DIRS for part in path.parts) and path.suffix in suffixes and path.is_file()
         )
 
 
@@ -398,7 +394,7 @@ def main() -> None:
 
     config = _load_config(root)
     skip = set(config.get("skip", []))  # type: ignore[call-overload]
-    line_length = str(config.get("line_length", 100))
+    line_length = str(config.get("line_length", 120))
     max_complexity = str(config.get("max_complexity", 6))
     python_version = str(config.get("python_version", "3.11"))
 
@@ -420,14 +416,10 @@ def main() -> None:
     complexity_env = {"CHECK_COMPLEXITY_MAX": max_complexity}
     abbrev_env = _build_abbrev_env(config)
 
-    passed = _run_custom_file_checkers(
-        all_files, skip, size_env, complexity_env, abbrev_env, results
-    )
+    passed = _run_custom_file_checkers(all_files, skip, size_env, complexity_env, abbrev_env, results)
     passed &= _run_custom_dir_checkers(root, skip, results)
     if py_files:
-        passed &= _run_py_checkers(
-            py_files, skip, ruff_cache, mypy_cache, line_length, python_version, results
-        )
+        passed &= _run_py_checkers(py_files, skip, ruff_cache, mypy_cache, line_length, python_version, results)
     passed &= _run_sh_checkers(sh_files, skip, results)
     passed &= _run_semgrep(root, skip, results)
 

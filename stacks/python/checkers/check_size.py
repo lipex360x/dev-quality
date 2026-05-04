@@ -27,9 +27,7 @@ def _py_file_findings(path: Path, line_count: int, max_file: int) -> list[str]:
     return []
 
 
-def _func_finding(
-    node: ast.FunctionDef | ast.AsyncFunctionDef, path: Path, max_func: int
-) -> str | None:
+def _func_finding(node: ast.FunctionDef | ast.AsyncFunctionDef, path: Path, max_func: int) -> str | None:
     if node.end_lineno is None:
         return None
     func_lines = node.end_lineno - node.lineno + 1
@@ -57,9 +55,7 @@ def _check_python(path: Path, max_file: int, max_func: int) -> list[str]:
         source = path.read_text(encoding="utf-8")
     except OSError as error:
         return [f"READ_ERROR:{path}:{error}"]
-    return _py_file_findings(path, len(source.splitlines()), max_file) + _py_func_findings(
-        path, source, max_func
-    )
+    return _py_file_findings(path, len(source.splitlines()), max_file) + _py_func_findings(path, source, max_func)
 
 
 def _is_single_line_func(stripped: str) -> bool:
@@ -82,9 +78,7 @@ def _bash_func_findings(path: Path, lines: list[str], max_func: int) -> list[str
         elif current_func is not None and stripped == "}":
             func_lines = lineno - current_func_line + 1
             if func_lines > max_func:
-                findings.append(
-                    f"FUNC_TOO_LONG:{path}:{current_func_line}:{current_func}:{func_lines}"
-                )
+                findings.append(f"FUNC_TOO_LONG:{path}:{current_func_line}:{current_func}:{func_lines}")
             current_func = None
 
     return findings

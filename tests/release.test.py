@@ -173,9 +173,7 @@ def test_update_readme_version_removes_old_rev_versions(tmp_path: Path) -> None:
 
 def test_update_readme_version_returns_true_when_only_rev_changed(tmp_path: Path) -> None:
     readme_only_rev = (
-        "# dev-quality\n\n"
-        "```yaml\nrepos:\n  - repo: https://github.com/lipex360x/dev-quality\n"
-        "    rev: v0.5.0\n```\n"
+        "# dev-quality\n\n```yaml\nrepos:\n  - repo: https://github.com/lipex360x/dev-quality\n    rev: v0.5.0\n```\n"
     )
     (tmp_path / "README.md").write_text(readme_only_rev, encoding="utf-8")
     assert _update_readme_version(tmp_path, "1.2.3") is True
@@ -186,9 +184,7 @@ def test_commit_version_bump_stages_pyproject_and_readme(tmp_path: Path) -> None
         mock_run.return_value = MagicMock(returncode=0)
         _commit_version_bump(tmp_path, "1.2.3")
     add_call = next(
-        invocation[0][0]
-        for invocation in mock_run.call_args_list
-        if invocation[0][0][:2] == ["git", "add"]
+        invocation[0][0] for invocation in mock_run.call_args_list if invocation[0][0][:2] == ["git", "add"]
     )
     assert "pyproject.toml" in add_call
     assert "README.md" in add_call
@@ -215,9 +211,7 @@ def test_commit_version_bump_message_contains_version(tmp_path: Path) -> None:
         mock_run.return_value = MagicMock(returncode=0)
         _commit_version_bump(tmp_path, "1.2.3")
     commit_call = next(
-        invocation[0][0]
-        for invocation in mock_run.call_args_list
-        if invocation[0][0][:2] == ["git", "commit"]
+        invocation[0][0] for invocation in mock_run.call_args_list if invocation[0][0][:2] == ["git", "commit"]
     )
     assert any("1.2.3" in part for part in commit_call)
 
@@ -297,9 +291,7 @@ def test_create_release_passes_notes_to_gh() -> None:
     with patch("subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=0)
         _create_release("v1.0.0", "my release notes")
-    gh_cmd = next(
-        invocation[0][0] for invocation in mock_run.call_args_list if invocation[0][0][0] == "gh"
-    )
+    gh_cmd = next(invocation[0][0] for invocation in mock_run.call_args_list if invocation[0][0][0] == "gh")
     assert "my release notes" in gh_cmd
 
 

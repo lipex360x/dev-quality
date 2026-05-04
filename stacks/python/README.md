@@ -61,7 +61,7 @@ Key settings to match the quality pipeline:
 
 ```toml
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py311"
 
 [tool.ruff.lint]

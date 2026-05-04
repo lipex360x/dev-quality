@@ -107,9 +107,7 @@ def test_py_func_no_end_lineno(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
 
     original = module._func_finding
 
-    def _patched(
-        node: ast.FunctionDef | ast.AsyncFunctionDef, path: Path, max_func: int
-    ) -> str | None:
+    def _patched(node: ast.FunctionDef | ast.AsyncFunctionDef, path: Path, max_func: int) -> str | None:
         node.end_lineno = None
         return original(node, path, max_func)  # type: ignore[no-any-return]
 
@@ -167,9 +165,7 @@ def test_bash_reports_function_line_number(tmp_path: Path) -> None:
 def test_bash_single_line_function_not_flagged(tmp_path: Path) -> None:
     script = tmp_path / "oneliner.sh"
     script.write_text(
-        "#!/usr/bin/env bash\n"
-        '_log_fb() { printf "%s\\n" "$*"; }\n'
-        'log_info() { _log_fb INFO "$*"; }\n',
+        '#!/usr/bin/env bash\n_log_fb() { printf "%s\\n" "$*"; }\nlog_info() { _log_fb INFO "$*"; }\n',
         encoding="utf-8",
     )
     assert _check_bash(script, 100, 5) == []

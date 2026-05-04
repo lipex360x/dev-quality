@@ -48,26 +48,20 @@ def test_load_skill_path_strips_whitespace(tmp_path: Path) -> None:
     assert _load_skill_path(config) == Path("/my/skills")
 
 
-def test_resolve_target_uses_explicit_target(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_resolve_target_uses_explicit_target(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sys, "argv", ["install-skill", "--target", "/explicit/path"])
     config = tmp_path / "skill_path"
     assert _resolve_target(config) == Path("/explicit/path")
 
 
-def test_resolve_target_falls_back_to_saved_path(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_resolve_target_falls_back_to_saved_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sys, "argv", ["install-skill"])
     config = tmp_path / "skill_path"
     config.write_text(str(tmp_path / "skills"), encoding="utf-8")
     assert _resolve_target(config) == tmp_path / "skills"
 
 
-def test_resolve_target_exits_when_no_target_and_no_saved_path(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_resolve_target_exits_when_no_target_and_no_saved_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sys, "argv", ["install-skill"])
     config = tmp_path / "skill_path"
     with pytest.raises(SystemExit) as raised:
@@ -87,9 +81,7 @@ def test_resolve_target_prints_usage_when_no_target_and_no_saved_path(
     assert "--target" in capsys.readouterr().out
 
 
-def test_resolve_target_exits_when_target_flag_has_no_value(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_resolve_target_exits_when_target_flag_has_no_value(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sys, "argv", ["install-skill", "--target"])
     config = tmp_path / "skill_path"
     with pytest.raises(SystemExit) as raised:
@@ -146,9 +138,7 @@ def test_install_copies_all_md_files(tmp_path: Path, monkeypatch: pytest.MonkeyP
     assert (destination / "bash.md").exists()
 
 
-def test_install_skill_md_contains_dev_quality(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_install_skill_md_contains_dev_quality(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     config = tmp_path / "skill_path"
     monkeypatch.setattr(sys, "argv", ["install-skill", "--target", str(tmp_path)])
     main(config_file=config)
@@ -193,9 +183,7 @@ def test_install_overwrites_existing_files(tmp_path: Path, monkeypatch: pytest.M
     assert content != "old content"
 
 
-def test_install_saves_target_path_to_config_file(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_install_saves_target_path_to_config_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     config = tmp_path / "skill_path"
     monkeypatch.setattr(sys, "argv", ["install-skill", "--target", str(tmp_path)])
     main(config_file=config)
@@ -203,9 +191,7 @@ def test_install_saves_target_path_to_config_file(
     assert str(tmp_path) in config.read_text(encoding="utf-8")
 
 
-def test_install_updates_without_target_when_path_is_saved(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_install_updates_without_target_when_path_is_saved(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     config = tmp_path / "skill_path"
     skills_dir = tmp_path / "skills"
     config.write_text(str(skills_dir), encoding="utf-8")

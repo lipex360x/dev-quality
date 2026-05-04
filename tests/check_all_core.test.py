@@ -281,9 +281,7 @@ def test_user_cache_dir_returns_path_under_tmp() -> None:
 
 
 def _write_precommit_config(directory: Path, repo_url: str, revision: str) -> None:
-    content = (
-        f"repos:\n  - repo: {repo_url}\n    rev: {revision}\n    hooks:\n      - id: check-all\n"
-    )
+    content = f"repos:\n  - repo: {repo_url}\n    rev: {revision}\n    hooks:\n      - id: check-all\n"
     (directory / ".pre-commit-config.yaml").write_text(content, encoding="utf-8")
 
 
@@ -370,9 +368,7 @@ def test_build_size_env_defaults() -> None:
 
 
 def test_build_size_env_reads_config() -> None:
-    size_environment = _build_size_env(
-        {"max_file_lines": 1000, "max_func_lines": 120, "max_test_file_lines": 2000}
-    )
+    size_environment = _build_size_env({"max_file_lines": 1000, "max_func_lines": 120, "max_test_file_lines": 2000})
     assert size_environment["CHECK_SIZE_MAX_FILE"] == "1000"
     assert size_environment["CHECK_SIZE_MAX_FUNC"] == "120"
     assert size_environment["CHECK_SIZE_MAX_TEST_FILE"] == "2000"

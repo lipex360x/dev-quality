@@ -147,9 +147,7 @@ def test_main_dirty_py_exits_1(
 
 
 def test_py_pep723_header_allowed(tmp_path: Path) -> None:
-    content = (
-        '# /// script\n# requires-python = ">=3.11"\n# dependencies = ["rich>=13"]\n# ///\nx = 1\n'
-    )
+    content = '# /// script\n# requires-python = ">=3.11"\n# dependencies = ["rich>=13"]\n# ///\nx = 1\n'
     path = write_py(tmp_path, content)
     assert check_python_file(path) == []
 

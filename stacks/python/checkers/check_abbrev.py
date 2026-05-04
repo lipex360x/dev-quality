@@ -144,9 +144,7 @@ def _node_identifier(node: ast.AST) -> str | None:
     return None
 
 
-def _is_flagged(
-    name: str, denylist: frozenset[str], allowlist: frozenset[str], min_length: int
-) -> bool:
+def _is_flagged(name: str, denylist: frozenset[str], allowlist: frozenset[str], min_length: int) -> bool:
     if name in allowlist:
         return False
     return name in denylist or (min_length > 0 and len(name) <= min_length)
@@ -222,9 +220,7 @@ def _check_bash_file(
         stripped = line.strip()
         if stripped.startswith("#"):
             continue
-        _check_bash_line(
-            stripped, path, lineno, denylist, effective_allowlist, findings, min_length
-        )
+        _check_bash_line(stripped, path, lineno, denylist, effective_allowlist, findings, min_length)
     return findings
 
 

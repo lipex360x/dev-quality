@@ -16,9 +16,7 @@ from check_abbrev import (
 )
 
 _DENY: frozenset[str] = frozenset(["ext", "cfg", "ref", "buf", "err", "exc", "fmt", "dest"])
-_ALLOW: frozenset[str] = frozenset(
-    ["self", "cls", "args", "kwargs", "i", "j", "k", "_", "id", "ok"]
-)
+_ALLOW: frozenset[str] = frozenset(["self", "cls", "args", "kwargs", "i", "j", "k", "_", "id", "ok"])
 _LANG: dict[str, frozenset[str]] = {"sh": frozenset(["dest"])}
 
 

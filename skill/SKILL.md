@@ -56,7 +56,7 @@ Defaults apply unconditionally. If `.dev-quality.yaml` exists at the project roo
 | Lines per test file | 1500 |
 | Lines per function | 100 |
 | Cyclomatic complexity (Bash) | 6 |
-| Line length | 100 |
+| Line length | 120 |
 
 ---
 

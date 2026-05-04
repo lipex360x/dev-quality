@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.13.2] — 2026-05-04
+
+### Changed
+- Default `line_length` changed from `100` to `120` across all layers: `check_all.py` default, `pyproject.toml`, `stacks/python/README.md`, `skill/SKILL.md`, and `README.md` config table.
+
+---
+
 ## [v0.13.1] — 2026-05-04
 
 ### Changed
