@@ -125,8 +125,9 @@ Never use manual `git tag` / `git push` / `gh release create` — always use the
 **On every behavior-changing commit:**
 1. `CHANGELOG.md` → add entry under the new version (this sets the version)
 2. `stacks/python/checkers/dev_quality_skill/SKILL.md` → reflect any new or changed rule
-3. Commit
-4. `uv run release.py --release` → reads version from CHANGELOG, updates `pyproject.toml` + README badge, commits those, creates tag, pushes, creates GitHub Release
+3. `README.md` → update any user-facing sections affected by the change (new commands, new config keys, updated defaults, new workflows). README must always reflect the current behavior — never leave it out of sync.
+4. Commit
+5. `uv run release.py --release` → reads version from CHANGELOG, updates `pyproject.toml` + README badge, commits those, creates tag, pushes, creates GitHub Release
 
 **For documentation-only commits** (README prose, CLAUDE.md, guides): commit + `git push`, do **not** run `release.py`.
 
