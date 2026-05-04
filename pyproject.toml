@@ -23,7 +23,7 @@ dev_quality_skill = ["SKILL.md"]
 
 [project]
 name = "dev-quality"
-version = "0.8.0"
+version = "0.8.1"
 requires-python = ">=3.11"
 dependencies = [
     "pyyaml>=6.0",
