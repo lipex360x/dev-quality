@@ -19,6 +19,13 @@
   language: python
   types: [shell]
 
+- id: check-noqa
+  name: Check inline suppressions
+  description: Rejects inline # noqa and # nosec annotations — use per-file-ignores in pyproject.toml instead
+  entry: check-noqa
+  language: python
+  types: [python]
+
 - id: check-size
   name: Check file and function size
   description: Flags files and functions that exceed line-length limits

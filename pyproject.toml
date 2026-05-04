@@ -42,6 +42,7 @@ check-bash-logs = "check_bash_logs:main"
 check-bash-tests = "check_bash_tests:main"
 check-comments = "check_comments:main"
 check-complexity = "check_complexity:main"
+check-noqa = "check_noqa:main"
 check-size = "check_size:main"
 
 [dependency-groups]
@@ -78,6 +79,8 @@ target-version = "py311"
 select = ["E", "F", "I", "UP", "B", "SIM", "RET", "C", "S", "N", "PLR2004"]
 
 [tool.ruff.lint.per-file-ignores]
+"stacks/python/checkers/*.py" = ["S603", "S607"]
+"release.py" = ["S603", "S607"]
 "tests/*.py" = ["S101", "S603", "S607", "PLR2004"]
 
 [tool.ruff.lint.mccabe]

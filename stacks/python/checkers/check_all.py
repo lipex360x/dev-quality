@@ -28,6 +28,7 @@ def _is_test_file(path: Path) -> bool:
 _CUSTOM_FILE_CHECKERS = [
     "check-abbrev",
     "check-comments",
+    "check-noqa",
     "check-size",
     "check-complexity",
 ]
@@ -39,8 +40,8 @@ _CUSTOM_DIR_CHECKERS = [
 
 def _collect(root: Path, suffixes: frozenset[str]) -> list[Path]:
     try:
-        result = subprocess.run(  # noqa: S603
-            ["git", "ls-files", "--cached", "--others", "--exclude-standard"],  # noqa: S607
+        result = subprocess.run(
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
             cwd=str(root),
             capture_output=True,
             text=True,
@@ -110,7 +111,7 @@ def _load_config(root: Path) -> dict[str, object]:
 
 def _run(command: list[str], extra_env: dict[str, str] | None = None) -> tuple[int, str]:
     run_env = {**os.environ, **extra_env} if extra_env else None
-    result = subprocess.run(command, capture_output=True, text=True, env=run_env)  # noqa: S603
+    result = subprocess.run(command, capture_output=True, text=True, env=run_env)
     combined = (result.stdout + result.stderr).strip()
     return result.returncode, combined
 
@@ -369,8 +370,8 @@ def _warn_if_precommit_outdated(root: Path) -> None:
                     f"Run `pre-commit autoupdate` to sync.",
                     flush=True,
                 )
-    except Exception:  # noqa: BLE001,S110  # nosec B110
-        pass
+    except (OSError, yaml.YAMLError, importlib.metadata.PackageNotFoundError):
+        return
 
 
 def main() -> None:

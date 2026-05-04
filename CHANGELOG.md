@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.10.0] — 2026-05-04
+
+### Added
+- `check-noqa`: new checker that rejects inline `# noqa` and `# nosec` annotations — use `per-file-ignores` in `pyproject.toml` instead
+
+### Changed
+- Moved `S603`/`S607` suppressions from inline `# noqa` to `pyproject.toml` per-file-ignores
+- Fixed `_warn_if_precommit_outdated` to catch specific exceptions instead of bare `except Exception`
+
+---
+
+## [v0.9.0] — 2026-05-04
+
+### Added
+- `check-all`: prints a `WARNING` when `.pre-commit-config.yaml` is pinned to an older `rev` than the installed version, with a `pre-commit autoupdate` hint
+
+---
+
 ## [v0.8.1] — 2026-05-04
 
 ### Added

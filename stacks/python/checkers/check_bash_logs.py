@@ -11,7 +11,7 @@ _EXEMPT_SCRIPTS = {"statusline.sh"}
 def _find_root() -> Path:
     try:
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],  # noqa: S607
+            ["git", "rev-parse", "--show-toplevel"],
             capture_output=True,
             text=True,
             check=True,

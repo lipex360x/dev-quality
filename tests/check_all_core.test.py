@@ -59,22 +59,22 @@ def test_collect_returns_sorted(tmp_path: Path) -> None:
 
 
 def test_collect_uses_git_ls_files_in_repo(tmp_path: Path) -> None:
-    subprocess.run(["git", "init"], cwd=str(tmp_path), check=True, capture_output=True)  # noqa: S607
+    subprocess.run(["git", "init"], cwd=str(tmp_path), check=True, capture_output=True)
     subprocess.run(
-        ["git", "config", "user.email", "t@t.com"],  # noqa: S607
+        ["git", "config", "user.email", "t@t.com"],
         cwd=str(tmp_path),
         check=True,
         capture_output=True,
     )
     subprocess.run(
-        ["git", "config", "user.name", "T"],  # noqa: S607
+        ["git", "config", "user.name", "T"],
         cwd=str(tmp_path),
         check=True,
         capture_output=True,
     )
     (tmp_path / "tracked.py").write_text("x = 1\n")
     subprocess.run(
-        ["git", "add", "tracked.py"],  # noqa: S607
+        ["git", "add", "tracked.py"],
         cwd=str(tmp_path),
         check=True,
         capture_output=True,
@@ -90,22 +90,22 @@ def test_collect_uses_git_ls_files_in_repo(tmp_path: Path) -> None:
 
 
 def test_collect_skips_staged_but_deleted_from_disk(tmp_path: Path) -> None:
-    subprocess.run(["git", "init"], cwd=str(tmp_path), check=True, capture_output=True)  # noqa: S607
+    subprocess.run(["git", "init"], cwd=str(tmp_path), check=True, capture_output=True)
     subprocess.run(
-        ["git", "config", "user.email", "t@t.com"],  # noqa: S607
+        ["git", "config", "user.email", "t@t.com"],
         cwd=str(tmp_path),
         check=True,
         capture_output=True,
     )
     subprocess.run(
-        ["git", "config", "user.name", "T"],  # noqa: S607
+        ["git", "config", "user.name", "T"],
         cwd=str(tmp_path),
         check=True,
         capture_output=True,
     )
     ghost = tmp_path / "ghost.sh"
     ghost.write_text("#!/bin/bash\n")
-    subprocess.run(["git", "add", "ghost.sh"], cwd=str(tmp_path), check=True, capture_output=True)  # noqa: S607
+    subprocess.run(["git", "add", "ghost.sh"], cwd=str(tmp_path), check=True, capture_output=True)
     ghost.unlink()
     result = _collect(tmp_path, frozenset([".sh"]))
     assert all(file_path.name != "ghost.sh" for file_path in result)
