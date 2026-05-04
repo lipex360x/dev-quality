@@ -45,6 +45,7 @@ check-comments = "check_comments:main"
 check-complexity = "check_complexity:main"
 check-noqa = "check_noqa:main"
 check-size = "check_size:main"
+install-skill = "install_skill:main"
 
 [dependency-groups]
 dev = [

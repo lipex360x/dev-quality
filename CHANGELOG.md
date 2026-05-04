@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v0.12.1] — 2026-05-04
+
+### Fixed
+- `install-skill` was missing from `[project.scripts]` in `pyproject.toml` — the standalone `install-skill` command was not available when installed via `uvx`
+
+---
+
 ## [v0.12.0] — 2026-05-04
 
 ### Added
