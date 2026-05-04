@@ -4,7 +4,7 @@
 
 Central repository for code quality tooling across stacks. Houses custom checker scripts, pre-commit hook definitions, and bootstrap scripts. Single source of truth — no more copying tools across projects.
 
-[![Version](https://img.shields.io/badge/version-v0.8.1-blue)](https://github.com/lipex360x/dev-quality/releases)
+[![Version](https://img.shields.io/badge/version-v0.9.0-blue)](https://github.com/lipex360x/dev-quality/releases)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://pre-commit.com)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue?logo=python)](https://www.python.org)
 
@@ -116,6 +116,18 @@ check-all /path/to/project
 check-abbrev src/main.py
 ```
 
+**Updating to the latest version:**
+
+```bash
+uv tool install git+https://github.com/lipex360x/dev-quality --reinstall
+```
+
+To pin to a specific release:
+
+```bash
+uv tool install git+https://github.com/lipex360x/dev-quality@v0.8.1 --reinstall
+```
+
 ### Automated on every commit — pre-commit
 
 [pre-commit](https://pre-commit.com) is a tool that runs checks automatically every time you run `git commit`. If any checker fails, the commit is blocked until the issue is fixed — no bad code reaches the repository.
@@ -140,7 +152,7 @@ winget install pre-commit
 ```yaml
 repos:
   - repo: https://github.com/lipex360x/dev-quality
-    rev: v0.8.1
+    rev: v0.9.0
     hooks:
       - id: check-all
 ```
@@ -366,7 +378,7 @@ To use specific checkers instead of `check-all`:
 ```yaml
 repos:
   - repo: https://github.com/lipex360x/dev-quality
-    rev: v0.8.1
+    rev: v0.9.0
     hooks:
       - id: check-abbrev
       - id: check-comments
