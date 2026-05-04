@@ -172,6 +172,13 @@ From this point on, every `git commit` runs all checkers automatically. If a che
 > pre-commit run --all-files
 > ```
 
+> [!TIP]
+> To update dev-quality to the latest released version:
+> ```bash
+> pre-commit autoupdate --repo https://github.com/lipex360x/dev-quality
+> ```
+> This updates the `rev` in `.pre-commit-config.yaml` to the newest tag.
+
 <div align="right"><a href="#dev-quality">↑ Back to top</a></div>
 
 ---
