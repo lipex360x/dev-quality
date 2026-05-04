@@ -445,6 +445,33 @@ def test_main_no_cache_flag_disables_mypy_incremental(
     assert "--cache-dir" not in mypy_calls[0]
 
 
+def test_main_mypy_excludes_test_files(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check-all", str(tmp_path)])
+    ok = MagicMock(returncode=0, stdout="", stderr="")
+    with (
+        patch(
+            "check_all._collect",
+            side_effect=_stub_collect(
+                tmp_path,
+                py=["src.py", "tests/conftest.py", "test_foo.py", "bar_test.py"],
+            ),
+        ),
+        patch("subprocess.run", return_value=ok) as mock_run,
+        pytest.raises(SystemExit),
+    ):
+        main()
+    mypy_calls = [call[0][0] for call in mock_run.call_args_list if call[0][0][0] == "mypy"]
+    assert mypy_calls
+    passed = mypy_calls[0]
+    assert str(tmp_path / "src.py") in passed
+    assert str(tmp_path / "tests/conftest.py") not in passed
+    assert str(tmp_path / "test_foo.py") not in passed
+    assert str(tmp_path / "bar_test.py") not in passed
+
+
 def test_main_no_cache_flag_resolves_path_correctly(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

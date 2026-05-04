@@ -11,6 +11,18 @@ import yaml
 from install_skill import main as _install_skill_main
 
 _SKIP_DIRS = frozenset(["__pycache__", ".venv", ".git", "node_modules"])
+_TEST_DIRS = frozenset(["tests", "test"])
+
+
+def _is_test_file(path: Path) -> bool:
+    name = path.name
+    return (
+        any(part in _TEST_DIRS for part in path.parts)
+        or name.startswith("test_")
+        or name.endswith("_test.py")
+        or name == "conftest.py"
+    )
+
 
 _CUSTOM_FILE_CHECKERS = [
     "check-abbrev",
@@ -255,6 +267,7 @@ def _run_py_checkers(
 
     if "mypy" not in skip:
         findings = []
+        mypy_files = [f for f in py_files if not _is_test_file(f)]
         ok = _run_on_files(
             [
                 "mypy",
@@ -265,7 +278,7 @@ def _run_py_checkers(
                 "--ignore-missing-imports",
                 "--disable-error-code=import-untyped",
             ],
-            py_files,
+            mypy_files,
             findings,
         )
         _print_findings(findings)
